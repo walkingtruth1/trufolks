@@ -74,7 +74,7 @@ export function JoinForm({ role }: { role: LeadRole }) {
 
   return (
     <form onSubmit={onSubmit} className="border border-ink bg-cream p-6 sm:p-8" noValidate>
-      <input type="hidden" name="access_key" value="81cc3f81-01ef-4b63-9e06-3ac811303f7f" />
+      <input type="hidden" name="access_key" value={import.meta.env.VITE_WEB3FORMS_KEY} />
       <input type="hidden" name="subject" value={`New TruFolks ${role} Submission`} />
       <input type="hidden" name="from_name" value="TruFolks Network" />
 
