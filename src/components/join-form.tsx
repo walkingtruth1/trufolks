@@ -25,20 +25,37 @@ export function JoinForm({ role }: { role: LeadRole }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const data = new FormData(formElement);
     const name = String(data.get("name") || "").trim();
     const email = String(data.get("email") || "").trim();
     const detail = String(data.get("detail") || "").trim();
     const extra = String(data.get("extra") || "").trim();
+
     if (!name || !email || !email.includes("@") || !detail) {
       setError("Name, a real email, and the first detail are required.");
       return;
     }
-    saveLead({ role, name, email, detail, extra });
-    setError("");
-    setDone(true);
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: data,
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        saveLead({ role, name, email, detail, extra });
+        setError("");
+        setDone(true);
+      } else {
+        setError(result.message || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    }
   }
 
   if (done) {
@@ -49,13 +66,13 @@ export function JoinForm({ role }: { role: LeadRole }) {
           {text.done}
         </p>
         <p className="mt-4 text-sm leading-relaxed text-ink/80">
-          "Your response has been recorded. We'll reach out to your email with next steps soon."
+          Your response has been recorded. We'll reach out to your email with next steps soon.
         </p>
       </div>
     );
   }
 
- return (
+  return (
     <form onSubmit={onSubmit} className="border border-ink bg-cream p-6 sm:p-8" noValidate>
       <input type="hidden" name="access_key" value="81cc3f81-01ef-4b63-9e06-3ac811303f7f" />
       <input type="hidden" name="subject" value={`New TruFolks ${role} Submission`} />
