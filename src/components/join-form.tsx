@@ -6,7 +6,7 @@ const copy = {
     detail: "What did you buy?",
     detailHint: "Product and brand",
     extra: "Where did you buy it?",
-    extraHint: "Store, site, or pharmacy",
+    extraHint: "Store, site, or retailer",
     submit: "Put me on the list",
     done: "You’re in. When a brand wants a real take on something you bought, this is how we find you.",
   },
@@ -49,15 +49,18 @@ export function JoinForm({ role }: { role: LeadRole }) {
           {text.done}
         </p>
         <p className="mt-4 text-sm leading-relaxed text-ink/80">
-          Held on this device for now, so you can see the flow. Next we can
-          send these straight to your inbox.
+          "Your response has been recorded. We'll reach out to your email with next steps soon."
         </p>
       </div>
     );
   }
 
-  return (
+ return (
     <form onSubmit={onSubmit} className="border border-ink bg-cream p-6 sm:p-8" noValidate>
+      <input type="hidden" name="access_key" value="81cc3f81-01ef-4b63-9e06-3ac811303f7f" />
+      <input type="hidden" name="subject" value={`New TruFolks ${role} Submission`} />
+      <input type="hidden" name="from_name" value="TruFolks Network" />
+
       <div className="grid gap-5">
         <Field label="Name" name="name" placeholder="Your name" />
         <Field label="Email" name="email" type="email" placeholder="you@email.com" />
@@ -65,7 +68,7 @@ export function JoinForm({ role }: { role: LeadRole }) {
         <Field label={text.extra} name="extra" placeholder={text.extraHint} optional />
       </div>
       {error ? (
-        <p className="mt-4 text-sm font-medium" role="alert">
+        <p className="mt-4 text-sm font-medium text-red-600" role="alert">
           {error}
         </p>
       ) : null}
