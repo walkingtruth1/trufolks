@@ -10,7 +10,6 @@ import { pgliteDialect } from "./pglite-dialect.ts";
 import { emailAndPasswordOptions, requireEmailVerification } from "./email-password.ts";
 import {
   devUserAllowed,
-  grokFederationEnabled,
   grokGateIdentityEnabled,
   resolveAuthConfigured,
 } from "./trufolks-auth-mode.ts";
@@ -84,16 +83,16 @@ test("a login cannot be deleted while its TruFolks profile exists", async () => 
   await assert.rejects(pg.query(`delete from "user" where id = $1`, [anaId]));
 });
 
-test("Grok sign-in paths are off; email/password alone enforces auth", () => {
-  assert.equal(grokFederationEnabled, false);
+test("Grok viewer sign-in is off; email/password alone enforces auth", () => {
   assert.equal(grokGateIdentityEnabled, false);
   assert.equal(requireEmailVerification, false);
   assert.equal(
-    resolveAuthConfigured({ authDisabled: false, emailPassword: true, grokFederation: false, grokCredsPresent: false }),
+    resolveAuthConfigured({ authDisabled: false, emailPassword: true }),
     true,
   );
+  assert.equal(resolveAuthConfigured({ authDisabled: false, emailPassword: false }), false);
   assert.equal(
-    resolveAuthConfigured({ authDisabled: true, emailPassword: true, grokFederation: false, grokCredsPresent: true }),
+    resolveAuthConfigured({ authDisabled: true, emailPassword: true }),
     false,
   );
 });
