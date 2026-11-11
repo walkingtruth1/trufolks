@@ -1,0 +1,104 @@
+// Ticket 2b — sign-up page. Plain, unstyled on purpose: visual design is not
+// decided yet (STITCH-UI-01). Email + password only.
+import { useState, type FormEvent } from "react";
+import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { authClient } from "@/lib/auth/client";
+import {
+  friendlyAuthError,
+  hasErrors,
+  MIN_PASSWORD_LENGTH,
+  validateSignUp,
+  type FieldErrors,
+} from "@/lib/auth/forms";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
+
+export const Route = createFileRoute("/sign-up")({ component: SignUp });
+
+function SignUp() {
+  const navigate = useNavigate();
+  const { user, isPending } = useCurrentUserState();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting) return;
+    const fieldErrors = validateSignUp({ name, email, password });
+    setErrors(fieldErrors);
+    setFormError(null);
+    if (hasErrors(fieldErrors)) return;
+    setSubmitting(true);
+    try {
+      const { error } = await authClient.signUp.email({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        setFormError(friendlyAuthError(error, "sign-up"));
+        return;
+      }
+      await navigate({ to: "/account" });
+    } catch {
+      setFormError(friendlyAuthError(null, "sign-up"));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!isPending && user) return <Navigate to="/account" />;
+
+  return (
+    <main className="mx-auto max-w-sm p-6">
+      <h1 className="mb-4 text-2xl font-semibold">Create your account</h1>
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1">
+          Your name
+          <input
+            className="rounded border px-3 py-2"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
+            aria-invalid={Boolean(errors.name)}
+          />
+          {errors.name ? <span role="alert">{errors.name}</span> : null}
+        </label>
+        <label className="flex flex-col gap-1">
+          Email
+          <input
+            className="rounded border px-3 py-2"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            aria-invalid={Boolean(errors.email)}
+          />
+          {errors.email ? <span role="alert">{errors.email}</span> : null}
+        </label>
+        <label className="flex flex-col gap-1">
+          Password (at least {MIN_PASSWORD_LENGTH} characters)
+          <input
+            className="rounded border px-3 py-2"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            aria-invalid={Boolean(errors.password)}
+          />
+          {errors.password ? <span role="alert">{errors.password}</span> : null}
+        </label>
+        {formError ? <p role="alert">{formError}</p> : null}
+        <button type="submit" disabled={submitting} className="rounded border px-4 py-2">
+          {submitting ? "Creating account…" : "Create account"}
+        </button>
+      </form>
+      <p className="mt-4">
+        Already have an account? <Link to="/sign-in" className="underline">Sign in</Link>
+      </p>
+    </main>
+  );
+}
