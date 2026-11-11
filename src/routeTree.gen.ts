@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as OfferRouteImport } from './routes/offer'
 import { Route as ShoppersRouteImport } from './routes/shoppers'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const ShoppersRoute = ShoppersRouteImport.update({
   path: '/shoppers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/brands': typeof BrandsRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/brands': typeof BrandsRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/brands': typeof BrandsRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/brands' | '/offer' | '/shoppers'
+  fullPaths: '/' | '/brands' | '/offer' | '/shoppers' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/brands' | '/offer' | '/shoppers'
-  id: '__root__' | '/' | '/brands' | '/offer' | '/shoppers'
+  to: '/' | '/brands' | '/offer' | '/shoppers' | '/api/auth/$'
+  id: '__root__' | '/' | '/brands' | '/offer' | '/shoppers' | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   BrandsRoute: typeof BrandsRoute
   OfferRoute: typeof OfferRoute
   ShoppersRoute: typeof ShoppersRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShoppersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrandsRoute: BrandsRoute,
   OfferRoute: OfferRoute,
   ShoppersRoute: ShoppersRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
