@@ -13,12 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as OfferRouteImport } from './routes/offer'
 import { Route as ShoppersRouteImport } from './routes/shoppers'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as AdminMerchantsRouteImport } from './routes/admin.merchants'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
-import { Route as DevSeedRouteImport } from './routes/dev.seed'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as PeopleUserIdRouteImport } from './routes/people.$userId'
 import { Route as RCodeRouteImport } from './routes/r.$code'
@@ -45,6 +46,11 @@ const ContactsRoute = ContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MerchantRoute = MerchantRouteImport.update({
+  id: '/merchant',
+  path: '/merchant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OfferRoute = OfferRouteImport.update({
   id: '/offer',
   path: '/offer',
@@ -65,14 +71,14 @@ const SignUpRoute = SignUpRouteImport.update({
   path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMerchantsRoute = AdminMerchantsRouteImport.update({
+  id: '/admin/merchants',
+  path: '/admin/merchants',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
   id: '/admin/purchases',
   path: '/admin/purchases',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevSeedRoute = DevSeedRouteImport.update({
-  id: '/dev/seed',
-  path: '/dev/seed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
@@ -106,12 +112,13 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/brands': typeof BrandsRoute
   '/contacts': typeof ContactsRoute
+  '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
-  '/dev/seed': typeof DevSeedRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
@@ -123,12 +130,13 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/brands': typeof BrandsRoute
   '/contacts': typeof ContactsRoute
+  '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
-  '/dev/seed': typeof DevSeedRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
@@ -141,12 +149,13 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/brands': typeof BrandsRoute
   '/contacts': typeof ContactsRoute
+  '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
-  '/dev/seed': typeof DevSeedRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
@@ -160,12 +169,13 @@ export interface FileRouteTypes {
     | '/account'
     | '/brands'
     | '/contacts'
+    | '/merchant'
     | '/offer'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/merchants'
     | '/admin/purchases'
-    | '/dev/seed'
     | '/invite/$token'
     | '/people/$userId'
     | '/r/$code'
@@ -177,12 +187,13 @@ export interface FileRouteTypes {
     | '/account'
     | '/brands'
     | '/contacts'
+    | '/merchant'
     | '/offer'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/merchants'
     | '/admin/purchases'
-    | '/dev/seed'
     | '/invite/$token'
     | '/people/$userId'
     | '/r/$code'
@@ -194,12 +205,13 @@ export interface FileRouteTypes {
     | '/account'
     | '/brands'
     | '/contacts'
+    | '/merchant'
     | '/offer'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/merchants'
     | '/admin/purchases'
-    | '/dev/seed'
     | '/invite/$token'
     | '/people/$userId'
     | '/r/$code'
@@ -212,12 +224,13 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   BrandsRoute: typeof BrandsRoute
   ContactsRoute: typeof ContactsRoute
+  MerchantRoute: typeof MerchantRoute
   OfferRoute: typeof OfferRoute
   ShoppersRoute: typeof ShoppersRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  AdminMerchantsRoute: typeof AdminMerchantsRoute
   AdminPurchasesRoute: typeof AdminPurchasesRoute
-  DevSeedRoute: typeof DevSeedRoute
   InviteTokenRoute: typeof InviteTokenRoute
   PeopleUserIdRoute: typeof PeopleUserIdRoute
   RCodeRoute: typeof RCodeRoute
@@ -255,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/merchant': {
+      id: '/merchant'
+      path: '/merchant'
+      fullPath: '/merchant'
+      preLoaderRoute: typeof MerchantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/offer': {
       id: '/offer'
       path: '/offer'
@@ -283,18 +303,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/merchants': {
+      id: '/admin/merchants'
+      path: '/admin/merchants'
+      fullPath: '/admin/merchants'
+      preLoaderRoute: typeof AdminMerchantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/purchases': {
       id: '/admin/purchases'
       path: '/admin/purchases'
       fullPath: '/admin/purchases'
       preLoaderRoute: typeof AdminPurchasesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev/seed': {
-      id: '/dev/seed'
-      path: '/dev/seed'
-      fullPath: '/dev/seed'
-      preLoaderRoute: typeof DevSeedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$token': {
@@ -340,12 +360,13 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   BrandsRoute: BrandsRoute,
   ContactsRoute: ContactsRoute,
+  MerchantRoute: MerchantRoute,
   OfferRoute: OfferRoute,
   ShoppersRoute: ShoppersRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  AdminMerchantsRoute: AdminMerchantsRoute,
   AdminPurchasesRoute: AdminPurchasesRoute,
-  DevSeedRoute: DevSeedRoute,
   InviteTokenRoute: InviteTokenRoute,
   PeopleUserIdRoute: PeopleUserIdRoute,
   RCodeRoute: RCodeRoute,
