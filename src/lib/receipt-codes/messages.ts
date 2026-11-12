@@ -1,6 +1,6 @@
 // Ticket 3a — plain reasons for every receipt code outcome (BRD v1.6 FR-10,
 // NFR-06, P8). Never a raw technical message. Safe to import anywhere.
-import { RECEIPT_CODE_LIMITS } from "./limits.ts";
+import { RECEIPT_CODE_LIMITS, RECEIPT_PHOTO_LIMITS } from "./limits.ts";
 
 /** Outcomes of scanning or claiming a code. 'ok' needs no message. */
 export const CODE_OUTCOMES = [
@@ -77,4 +77,64 @@ export function codeMessage(outcome: CodeOutcome): string | null {
 
 export function generateMessage(outcome: GenerateOutcome): string | null {
   return outcome === "ok" ? null : GENERATE_MESSAGES[outcome];
+}
+
+/** Outcomes of uploading a receipt photo (Ticket 3b-1). */
+export const PHOTO_OUTCOMES = [
+  "ok",
+  "bad_photo",
+  "too_big",
+  "not_found",
+  "already_decided",
+  "duplicate_photo",
+  "unavailable",
+] as const;
+export type PhotoOutcome = (typeof PHOTO_OUTCOMES)[number];
+
+/** Outcomes of an admin deciding a purchase (Ticket 3b-1). Shown to admins only. */
+export const DECIDE_OUTCOMES = [
+  "ok",
+  "not_allowed",
+  "not_found",
+  "already_decided",
+  "own_purchase",
+  "no_photo",
+  "bad_value",
+  "reason_required",
+  "code_not_usable",
+  "bad_decision",
+  "unavailable",
+] as const;
+export type DecideOutcome = (typeof DECIDE_OUTCOMES)[number];
+
+const maxPhotoKb = Math.round(RECEIPT_PHOTO_LIMITS.maxPhotoBytes / 1024);
+
+const PHOTO_MESSAGES: Record<Exclude<PhotoOutcome, "ok">, string> = {
+  bad_photo: "That file isn't a photo we can use. Please take a clear photo of your receipt.",
+  too_big: `That photo is too large (the limit is ${maxPhotoKb} KB). Please try again.`,
+  not_found: "We couldn't find that purchase on your account.",
+  already_decided: "Your receipt has already been checked, so a new photo isn't needed.",
+  duplicate_photo: "This receipt photo has already been used. Please take a photo of your own receipt.",
+  unavailable: "We couldn't save your photo right now. Please try again in a minute.",
+};
+
+const DECIDE_MESSAGES: Record<Exclude<DecideOutcome, "ok">, string> = {
+  not_allowed: "This page is for the TruFolks team only.",
+  not_found: "We couldn't find that purchase.",
+  already_decided: "This purchase has already been decided.",
+  own_purchase: "You can't check your own purchase. Ask another team member.",
+  no_photo: "There's no receipt photo yet, so this purchase can't be approved.",
+  bad_value: "Please enter the amount shown on the receipt.",
+  reason_required: "Please give a reason for turning this purchase down.",
+  code_not_usable: "This purchase's code has been switched off, so it can't be approved.",
+  bad_decision: "Please choose approve or turn down.",
+  unavailable: "We couldn't save that right now. Please try again in a minute.",
+};
+
+export function photoMessage(outcome: PhotoOutcome): string | null {
+  return outcome === "ok" ? null : PHOTO_MESSAGES[outcome];
+}
+
+export function decideMessage(outcome: DecideOutcome): string | null {
+  return outcome === "ok" ? null : DECIDE_MESSAGES[outcome];
 }

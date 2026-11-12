@@ -48,3 +48,22 @@ export const DEVICE_TOKEN_MAX_AGE_SECONDS = 400 * DAY;
 
 /** Name of the long-lived device cookie (HON-07). Not a session cookie. */
 export const DEVICE_COOKIE_NAME = "tf_device";
+
+/** Ticket 3b-1 — receipt photo limits. CFG-11 placeholder presets (Ticket 7), not decisions. */
+export interface ReceiptPhotoLimits {
+  /** Largest compressed receipt photo accepted. */
+  maxPhotoBytes: number;
+  /** Largest slice of the original file's header accepted (only its date is read). */
+  maxHeaderBytes: number;
+  /** Photo bytes are deleted this long after upload; the hash and dates stay. */
+  retentionSeconds: number;
+  /** Slack when comparing the photo's own time to the campaign / typed purchase time. */
+  exifSlackSeconds: number;
+}
+
+export const RECEIPT_PHOTO_LIMITS: Readonly<ReceiptPhotoLimits> = Object.freeze({
+  maxPhotoBytes: 400 * 1024,
+  maxHeaderBytes: 128 * 1024,
+  retentionSeconds: 60 * DAY,
+  exifSlackSeconds: 12 * HOUR,
+});
