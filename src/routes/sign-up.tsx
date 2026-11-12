@@ -1,7 +1,7 @@
 // Ticket 2b — sign-up page. Plain, unstyled on purpose: visual design is not
 // decided yet (STITCH-UI-01). Email + password only.
-import { useState, type FormEvent } from "react";
-import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth/client";
 import {
   friendlyAuthError,
@@ -11,11 +11,20 @@ import {
   type FieldErrors,
 } from "@/lib/auth/forms";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
-export const Route = createFileRoute("/sign-up")({ component: SignUp });
+// Ticket 3b-2: `?next=` returns people to the page they came from (e.g. a
+// scanned receipt code). Only same-site paths are honoured (safeNextPath).
+export const Route = createFileRoute("/sign-up")({
+  validateSearch: (search: Record<string, unknown>): { next?: string } =>
+    typeof search.next === "string" ? { next: search.next } : {},
+  component: SignUp,
+});
 
 function SignUp() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const target = safeNextPath(next);
   const { user, isPending } = useCurrentUserState();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,6 +32,13 @@ function SignUp() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Already signed in: go straight on. (`<Navigate>` needs a typed route, and
+  // `next` is a plain path string, so navigate by href instead.)
+  const alreadySignedIn = !isPending && Boolean(user);
+  useEffect(() => {
+    if (alreadySignedIn) void navigate({ href: target, replace: true });
+  }, [alreadySignedIn, navigate, target]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,7 +58,7 @@ function SignUp() {
         setFormError(friendlyAuthError(error, "sign-up"));
         return;
       }
-      await navigate({ to: "/account" });
+      await navigate({ href: target });
     } catch {
       setFormError(friendlyAuthError(null, "sign-up"));
     } finally {
@@ -50,7 +66,7 @@ function SignUp() {
     }
   }
 
-  if (!isPending && user) return <Navigate to="/account" />;
+  if (alreadySignedIn) return null;
 
   return (
     <main className="mx-auto max-w-sm p-6">
@@ -97,7 +113,7 @@ function SignUp() {
         </button>
       </form>
       <p className="mt-4">
-        Already have an account? <Link to="/sign-in" className="underline">Sign in</Link>
+        Already have an account? <Link to="/sign-in" search={next ? { next } : {}} className="underline">Sign in</Link>
       </p>
     </main>
   );

@@ -16,6 +16,9 @@ import { Route as OfferRouteImport } from './routes/offer'
 import { Route as ShoppersRouteImport } from './routes/shoppers'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
+import { Route as DevSeedRouteImport } from './routes/dev.seed'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +56,21 @@ const SignUpRoute = SignUpRouteImport.update({
   path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
+  id: '/admin/purchases',
+  path: '/admin/purchases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevSeedRoute = DevSeedRouteImport.update({
+  id: '/dev/seed',
+  path: '/dev/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -67,6 +85,9 @@ export interface FileRoutesByFullPath {
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/purchases': typeof AdminPurchasesRoute
+  '/dev/seed': typeof DevSeedRoute
+  '/r/$code': typeof RCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +98,9 @@ export interface FileRoutesByTo {
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/purchases': typeof AdminPurchasesRoute
+  '/dev/seed': typeof DevSeedRoute
+  '/r/$code': typeof RCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -88,6 +112,9 @@ export interface FileRoutesById {
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/purchases': typeof AdminPurchasesRoute
+  '/dev/seed': typeof DevSeedRoute
+  '/r/$code': typeof RCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +127,9 @@ export interface FileRouteTypes {
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/purchases'
+    | '/dev/seed'
+    | '/r/$code'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +140,9 @@ export interface FileRouteTypes {
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/purchases'
+    | '/dev/seed'
+    | '/r/$code'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -120,6 +153,9 @@ export interface FileRouteTypes {
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/purchases'
+    | '/dev/seed'
+    | '/r/$code'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +167,9 @@ export interface RootRouteChildren {
   ShoppersRoute: typeof ShoppersRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  AdminPurchasesRoute: typeof AdminPurchasesRoute
+  DevSeedRoute: typeof DevSeedRoute
+  RCodeRoute: typeof RCodeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -185,6 +224,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/purchases': {
+      id: '/admin/purchases'
+      path: '/admin/purchases'
+      fullPath: '/admin/purchases'
+      preLoaderRoute: typeof AdminPurchasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/seed': {
+      id: '/dev/seed'
+      path: '/dev/seed'
+      fullPath: '/dev/seed'
+      preLoaderRoute: typeof DevSeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -203,6 +263,9 @@ const rootRouteChildren: RootRouteChildren = {
   ShoppersRoute: ShoppersRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  AdminPurchasesRoute: AdminPurchasesRoute,
+  DevSeedRoute: DevSeedRoute,
+  RCodeRoute: RCodeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
@@ -210,10 +273,13 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
+
 import type { createStart } from '@tanstack/react-start'
+
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
+
     router: Awaited<ReturnType<typeof getRouter>>
   }
 }

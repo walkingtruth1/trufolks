@@ -3,8 +3,8 @@
 //
 // Thin wrappers: rules live in photos.ts and the 0005 migration. Server-only
 // modules are imported INSIDE handlers so they never reach the browser bundle.
-// Plain messages only; photos and codes are never logged. No pages call these
-// yet (scan page and admin page are Ticket 3b-2).
+// Plain messages only; photos and codes are never logged. Called by the scan
+// page (/r/$code) and the admin page (/admin/purchases), Ticket 3b-2.
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { RECEIPT_PHOTO_LIMITS } from "./limits.ts";
@@ -31,10 +31,15 @@ function decideFail(reason: Exclude<DecideOutcome, "ok">) {
   return { ok: false as const, reason, message: decideMessage(reason) ?? "" };
 }
 
-/** Is the caller on the admin allowlist? */
+/** Is the caller on the admin allowlist? (Locally, also the dev-only email list — see admin.ts.) */
 async function callerIsAdmin(userId: string): Promise<boolean> {
-  const { isAdmin } = await import("./admin.ts");
-  return isAdmin(userId);
+  const { findAuthEmail, isAdminCaller } = await import("./admin.ts");
+  return isAdminCaller(userId, {
+    lookupEmail: async (id) => {
+      const { getSql } = await import("@/lib/db");
+      return findAuthEmail(await getSql(), id);
+    },
+  });
 }
 
 /**
