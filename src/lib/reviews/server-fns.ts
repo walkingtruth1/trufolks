@@ -31,9 +31,11 @@ export const getReviewStart = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => ({ purchaseId: text(data, "purchaseId", 100) }))
   .handler(async ({ data, context }) => {
     try {
-      const { getSql } = await import("@/lib/db");
+      // Ticket 7: also runs the settings check (CFG-01) before the disclosure is built.
+      const { getConfiguredSql } = await import("@/lib/config/runtime");
       const engine = await import("./engine.ts");
-      const r = await engine.getReviewStart(await getSql(), { purchaseId: data.purchaseId, userId: context.userId });
+      const { sql } = await getConfiguredSql();
+      const r = await engine.getReviewStart(sql, { purchaseId: data.purchaseId, userId: context.userId });
       if (r.outcome !== "ok") return fail("not_found");
       return { ok: true as const, start: r.start };
     } catch (err) {
@@ -57,9 +59,11 @@ export const submitReview = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     try {
-      const { getSql } = await import("@/lib/db");
+      // Ticket 7: also runs the settings check (CFG-01) before the disclosure is built.
+      const { getConfiguredSql } = await import("@/lib/config/runtime");
       const engine = await import("./engine.ts");
-      const r = await engine.submitReview(await getSql(), {
+      const { sql } = await getConfiguredSql();
+      const r = await engine.submitReview(sql, {
         purchaseId: data.purchaseId,
         userId: context.userId,
         fields: { rating: data.rating, whatUsed: data.whatUsed, howLong: data.howLong, honestThought: data.honestThought },

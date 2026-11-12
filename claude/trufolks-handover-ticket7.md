@@ -21,7 +21,7 @@ Ticket 6 is written to the repo, not yet committed (Jack commits).
   - `merchant_events`: append-only log of created / offer_created / terms_accepted / walkthrough_accepted, with who did each.
   - Trigger `merchants_acceptance_locked`: a merchant's owner can't change, and once `terms_accepted_at` or `walkthrough_accepted_at` is set it can't be changed or cleared.
   - `trufolks_admin_create_merchant`: creates the business as `verified` (MER-01 checked in person). The caller's admin status is checked in the app.
-  - `trufolks_admin_create_offer`: creates a **Type A, live** offer only (CFG-11 pilot preset). The end must be after the start and in the future.
+  - `trufolks_admin_create_offer`: creates a **Type A, live** offer only (CFG-05 pilot preset; called CFG-11 by mistake before Ticket 7). The end must be after the start and in the future.
   - `trufolks_merchant_accept(user, merchant, 'terms' | 'walkthrough')`: owner only, logged. The existing code engine already refuses to make codes until both are accepted.
   - `trufolks_owner_offer_stats(owner)` (MER-05 funnel + counts by star, FR-24) and `trufolks_owner_reviews(owner, limit)` (no reviewer name or id). **Every dashboard read takes the owner's id**, so an owner never sees another business (§13, gap 9 closed).
 - `src/lib/merchants/`: `limits.ts` (CFG placeholders: 200 reviews on the dashboard, 10 codes suggested per batch), `messages.ts` (MER-02 statement and MER-07 walkthrough — **lawyer DRAFTS**), `engine.ts`, `server-fns.ts` (admin functions check `isAdminCaller`), `merchants.test.ts`.

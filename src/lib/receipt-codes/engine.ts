@@ -213,27 +213,31 @@ export async function claimCode(
   if (!input.deviceId) return { outcome: "device_missing" };
   if (!validPurchaseDetails(input.details)) return { outcome: "invalid_details" };
   const code = normalizeCode(input.rawCode);
-  const rows = await sql.query<{
-    r_outcome: CodeOutcome;
-    r_purchase_id: string | null;
-    r_user_claims_in_campaign: number | null;
-  }>(
-    `select * from trufolks_claim_receipt_code($1, $2, $3, $4, $5, $6, $7, $8::timestamptz, $9, $10, $11, $12)`,
-    [
-      code ? hashCode(code, input.keys) : null,
-      input.deviceId,
-      input.userId,
-      input.ipHash,
-      input.details.productLabel.trim(),
-      input.details.orderValueCents,
-      input.details.currency,
-      input.details.purchasedAt,
-      input.limits.purchaseClockSkewSeconds,
-      input.limits.failureWindowSeconds,
-      input.limits.maxFailuresPerDevice,
-      input.limits.maxFailuresPerIp,
-    ],
-  );
+  type ClaimRow = { r_outcome: CodeOutcome; r_purchase_id: string | null; r_user_claims_in_campaign: number | null };
+  let rows: ClaimRow[];
+  try {
+    rows = await sql.query<ClaimRow>(
+      `select * from trufolks_claim_receipt_code($1, $2, $3, $4, $5, $6, $7, $8::timestamptz, $9, $10, $11, $12)`,
+      [
+        code ? hashCode(code, input.keys) : null,
+        input.deviceId,
+        input.userId,
+        input.ipHash,
+        input.details.productLabel.trim(),
+        input.details.orderValueCents,
+        input.details.currency,
+        input.details.purchasedAt,
+        input.limits.purchaseClockSkewSeconds,
+        input.limits.failureWindowSeconds,
+        input.limits.maxFailuresPerDevice,
+        input.limits.maxFailuresPerIp,
+      ],
+    );
+  } catch (err) {
+    // Ticket 7: the offer-cap backstop (migration 0009) refuses a racing claim.
+    if (err instanceof Error && err.message.includes("TRUFOLKS_CAMPAIGN_FULL")) return { outcome: "campaign_full" };
+    throw err;
+  }
   const r = rows[0];
   if (!r) return { outcome: "unavailable" };
   if (r.r_outcome !== "ok") return { outcome: r.r_outcome };

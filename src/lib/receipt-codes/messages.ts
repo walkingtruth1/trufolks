@@ -14,6 +14,7 @@ export const CODE_OUTCOMES = [
   "campaign_not_live",
   "campaign_not_started",
   "campaign_ended",
+  "campaign_full",
   "own_business",
   "purchase_outside_window",
   "rate_limited",
@@ -37,8 +38,6 @@ export const GENERATE_OUTCOMES = [
 ] as const;
 export type GenerateOutcome = (typeof GENERATE_OUTCOMES)[number];
 
-const waitMinutes = Math.ceil(RECEIPT_CODE_LIMITS.failureWindowSeconds / 60);
-
 const CODE_MESSAGES: Record<Exclude<CodeOutcome, "ok">, string> = {
   malformed: "That code doesn't look right. Check it against your receipt for typos and try again.",
   not_found: "We couldn't find that code. Check it against your receipt and try again.",
@@ -49,10 +48,13 @@ const CODE_MESSAGES: Record<Exclude<CodeOutcome, "ok">, string> = {
   campaign_not_live: "This offer isn't running right now, so this code can't be used.",
   campaign_not_started: "This offer hasn't started yet. Please try again once it starts.",
   campaign_ended: "This offer has ended, so this code can't be used.",
+  // Ticket 7 (CFG-04, FR-21): the offer reached its cap.
+  campaign_full: "This offer is full: it has reached the most reviews it can pay back. This code can't be used.",
   own_business:
     "People who own or work for this business can't be paid back for reviewing it.",
   purchase_outside_window: "That purchase date is outside this offer's dates.",
-  rate_limited: `Too many tries. Please wait ${waitMinutes} minutes and try again.`,
+  // Ticket 7: the wait is a setting now (CFG-11), so the message doesn't name a number.
+  rate_limited: "Too many tries. Please wait a few minutes and try again.",
   device_missing: "Please open your code link on this phone again, then try once more.",
   invalid_details: "Please fill in what you bought, what it cost and when you bought it.",
   unavailable:

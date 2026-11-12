@@ -1,9 +1,11 @@
 // Ticket 3a — receipt code limits (BRD v1.6 HON-07, FR-08, CFG-11).
 //
-// CFG-11 (Ticket 7): every value here is a PLACEHOLDER PRESET, not a decision.
-// Ticket 7 moves them into the toggle system (immutable log, startup
-// validation, 24-hour cooling-off for live campaigns). Until then they are
-// named in one place so nothing is hard-coded elsewhere. No money values here.
+// Ticket 7: the fraud-check values (code lifetime, failure windows and counts,
+// new-device limits, clock slack) are now SETTINGS (CFG-11, src/lib/config),
+// read through codeLimitsFrom(). The numbers below are only the built-in
+// fallback and must match the pilot preset (a test checks it). maxUsesPerCode
+// and maxCodesPerBatch stay here: single use is a guardrail, the batch size is
+// a technical limit. No money values here.
 
 export interface ReceiptCodeLimits {
   /** Uses per code. The database refuses anything but 1 until reuse is designed (HON-04). */

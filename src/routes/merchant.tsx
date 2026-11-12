@@ -4,7 +4,8 @@
 // * The owner first reads and accepts the mixed-ratings walkthrough (MER-07)
 //   and the pay-for-any-rating statement (MER-02). Codes can't be made before.
 // * Per offer: scan-to-review numbers (MER-05) and every rating (FR-24).
-//   Reward cost to date and cap remaining show "Not set yet" until Tickets 7/8.
+//   Reviews left and pool left come from the offer's settings (CFG-04, Ticket
+//   7). "Paid back so far" shows "Not set yet" until the payout ledger (Ticket 8).
 // * Reviews with no reviewer name (P5), every rating, newest first. The
 //   business can't approve, hide or remove a review.
 // * Make receipt codes (existing generateReceiptCodes): shown once as
@@ -19,6 +20,7 @@ import { acceptMerchantStatement, getMerchantDashboard } from "@/lib/merchants/s
 import { RECEIPT_CODE_LIMITS } from "@/lib/receipt-codes/limits";
 import { generateReceiptCodes } from "@/lib/receipt-codes/server-fns";
 import { ratingText } from "@/lib/reviews/review-input";
+import { formatCents } from "@/lib/receipt-codes/form-input";
 
 export const Route = createFileRoute("/merchant")({ component: MerchantPage });
 
@@ -206,7 +208,14 @@ function OfferView({ offer: o, canMakeCodes, onChange }: { offer: OfferStats; ca
       </ul>
       <dl className="mt-2">
         <Row label="Paid back so far" value={NOT_SET_YET} />
-        <Row label="Left in your offer's budget" value={NOT_SET_YET} />
+        {o.room ? (
+          <>
+            <Row label="Reviews left in this offer" value={Math.max(0, o.room.maxReviews - o.room.claims)} />
+            <Row label="Budget left (owed and pending taken off)" value={formatCents(Math.max(0, o.room.poolCents - o.room.committedCents))} />
+          </>
+        ) : (
+          <Row label="Left in your offer's budget" value={NOT_SET_YET} />
+        )}
       </dl>
       {canMakeCodes && !ended ? <MakeCodes campaignId={o.campaignId} onChange={onChange} /> : null}
     </div>

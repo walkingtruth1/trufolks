@@ -10,6 +10,7 @@ export const MERCHANT_OUTCOMES = [
   "not_found",
   "owner_not_found",
   "invalid",
+  "too_long",
   "not_allowed",
   "unavailable",
 ] as const;
@@ -20,6 +21,8 @@ const MERCHANT_MESSAGES: Record<Exclude<MerchantOutcome, "ok">, string> = {
   not_found: "We couldn't find that business on your account.",
   owner_not_found: "There's no TruFolks account with that email. Ask the owner to create one first.",
   invalid: "Please check the details and try again. The offer must end after it starts, and in the future.",
+  // Ticket 7 (CFG-04): offer length is a setting.
+  too_long: "That offer is longer than the settings allow. Shorten it, or change the most days an offer can run in Settings.",
   not_allowed: "This page is for the TruFolks team only.",
   unavailable: "Something went wrong on our side. Nothing was changed. Please try again in a minute.",
 };
@@ -50,5 +53,5 @@ export const WALKTHROUGH = {
   ],
 };
 
-/** Shown where payout numbers will go once Tickets 7/8 exist. */
+/** Shown where payout numbers will go once Ticket 8 exists. */
 export const NOT_SET_YET = "Not set yet";

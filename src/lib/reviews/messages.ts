@@ -8,6 +8,7 @@ export const REVIEW_OUTCOMES = [
   "rejected",
   "already_reviewed",
   "invalid",
+  "amount_not_set",
   "unavailable",
 ] as const;
 export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[number];
@@ -18,6 +19,9 @@ const REVIEW_MESSAGES: Record<Exclude<ReviewOutcome, "ok">, string> = {
   rejected: "We couldn't confirm this purchase from the receipt, so it can't be reviewed here.",
   already_reviewed: "You've already posted a review for this purchase.",
   invalid: "Please choose a star rating and answer all three questions.",
+  // Ticket 7, gap 20: keep the scan-page promise — people see what they get back before writing.
+  amount_not_set:
+    "We can't show what you'll get back for this purchase yet, so you can't write your review just now. Please try again later.",
   unavailable: "We couldn't save your review right now. Nothing was posted. Please try again in a minute.",
 };
 

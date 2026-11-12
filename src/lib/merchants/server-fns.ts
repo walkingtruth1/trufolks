@@ -27,9 +27,11 @@ function logFailure(where: string, err: unknown) {
 }
 
 async function deps() {
-  const { getSql } = await import("@/lib/db");
+  // Ticket 7: getConfiguredSql also runs the settings check (CFG-01).
+  const { getConfiguredSql } = await import("@/lib/config/runtime");
   const engine = await import("./engine.ts");
-  return { sql: await getSql(), engine };
+  const { sql } = await getConfiguredSql();
+  return { sql, engine };
 }
 
 async function callerIsAdmin(userId: string): Promise<boolean> {
@@ -116,7 +118,7 @@ export const createBusinessForAdmin = createServerFn({ method: "POST" })
     }
   });
 
-/** Create a live Type A offer for a business (pilot preset). Dates are ISO strings. */
+/** Create a live offer for a business; type and most days come from settings. Dates are ISO strings. */
 export const createOfferForAdmin = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .inputValidator((data: unknown) => ({

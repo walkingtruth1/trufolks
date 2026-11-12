@@ -6,7 +6,8 @@
 // completed (AI-05). They see the rating-blind statement before writing
 // (HON-02), preview the review with its disclosure exactly as contacts will
 // see it (FR-14), then post. After posting it can't be changed (FR-15).
-// No amount or formula is shown until Tickets 7/8.
+// Ticket 7: the amount and formula are shown before writing (gap 17 promise);
+// if the amount isn't known yet, writing is blocked (gap 20).
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -15,6 +16,8 @@ import { REVIEW_LIMITS } from "@/lib/reviews/limits";
 import { RATING_BLIND_STATEMENT, reviewMessage } from "@/lib/reviews/messages";
 import { checkReviewInput, type ReviewField, type ReviewInput } from "@/lib/reviews/review-input";
 import { ReviewCard } from "@/lib/reviews/review-card";
+import { formulaText } from "@/lib/config/preset";
+import { formatCents } from "@/lib/receipt-codes/form-input";
 import type { ReviewStart, ReviewView } from "@/lib/reviews/engine";
 
 export const Route = createFileRoute("/review/$purchaseId")({ component: ReviewPage });
@@ -88,6 +91,8 @@ function ReviewPage() {
         <p>{reviewMessage("not_verified")}</p>
       ) : start.status === "rejected" ? (
         <p>{reviewMessage("rejected")}</p>
+      ) : !start.disclosure || start.disclosure.reward.status === "not_set" ? (
+        <p>{reviewMessage("amount_not_set")}</p>
       ) : (
         <Writer start={start} onPosted={(review) => setPage({ kind: "ready", start: { ...start, review } })} />
       )}
@@ -102,6 +107,14 @@ function Posted({ review }: { review: ReviewView }) {
       <ReviewCard {...review} />
     </>
   );
+}
+
+function whatYouGetBack(start: ReviewStart): string {
+  const d = start.disclosure;
+  if (!d || !d.incentive) return "This purchase isn't part of a paid-back offer.";
+  if (d.reward.status !== "set" || d.reward.amountCents === null || !d.reward.formula) return reviewMessage("amount_not_set") ?? "";
+  const f = d.reward.formula;
+  return `What you get back: ${formatCents(d.reward.amountCents, f.currency)}, whatever rating you give. ${formulaText(f)}`;
 }
 
 const EMPTY = { rating: 0, whatUsed: "", howLong: "", honestThought: "" };
@@ -182,7 +195,7 @@ function Writer({ start, onPosted }: { start: ReviewStart; onPosted: (review: Re
     <form onSubmit={onPreview} noValidate autoComplete="off" className="flex flex-col gap-3">
       <p>You bought: {start.productLabel}</p>
       <p>{RATING_BLIND_STATEMENT}</p>
-      <p>What you get back: the amount for this offer isn't set yet.</p>
+      <p>{whatYouGetBack(start)}</p>
 
       <fieldset className="flex flex-col gap-1">
         <legend>Your star rating</legend>

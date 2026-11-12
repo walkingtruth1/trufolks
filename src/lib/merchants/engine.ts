@@ -31,6 +31,8 @@ export interface OfferStats {
   reviews: number;
   /** FR-24: every rating; index 0 = 1 star. */
   starCounts: [number, number, number, number, number];
+  /** Ticket 7 (CFG-04): the offer's cap and how much of it is used. Null if its settings can't be read. */
+  room: { claims: number; maxReviews: number; committedCents: number; poolCents: number } | null;
 }
 
 /** A review as the business sees it: no reviewer name or id (P5). */
@@ -92,6 +94,21 @@ export async function getDashboard(sql: Sql, input: { userId: string; limits: Me
   }>(`select * from trufolks_owner_reviews($1, $2)`, [input.userId, input.limits.dashboardReviewsMax]);
 
   const n = (v: unknown) => Number(v ?? 0);
+  // Ticket 7: cap usage per offer, from the offer's pinned settings (CFG-04).
+  const rooms = new Map<string, OfferStats["room"]>();
+  for (const s of stats) {
+    const r = await sql.query<{ r_claims: number; r_max_reviews: number | null; r_committed_cents: number; r_pool_cents: number | null }>(
+      `select * from trufolks_campaign_room($1, 0)`,
+      [String(s.campaign_id)],
+    );
+    const x = r[0];
+    rooms.set(
+      String(s.campaign_id),
+      x && x.r_max_reviews !== null && x.r_pool_cents !== null
+        ? { claims: n(x.r_claims), maxReviews: n(x.r_max_reviews), committedCents: n(x.r_committed_cents), poolCents: n(x.r_pool_cents) }
+        : null,
+    );
+  }
   return merchants.map((m) => ({
     merchantId: m.id,
     name: m.name,
@@ -114,7 +131,8 @@ export async function getDashboard(sql: Sql, input: { userId: string; limits: Me
         purchasesVerified: n(s.purchases_verified),
         purchasesRejected: n(s.purchases_rejected),
         reviews: n(s.reviews),
-        starCounts: [n(s.stars_1), n(s.stars_2), n(s.stars_3), n(s.stars_4), n(s.stars_5)],
+        starCounts: [n(s.stars_1), n(s.stars_2), n(s.stars_3), n(s.stars_4), n(s.stars_5)] as OfferStats["starCounts"],
+        room: rooms.get(String(s.campaign_id)) ?? null,
       })),
     reviews: reviews
       .filter((r) => r.merchant_id === m.id)
@@ -230,11 +248,11 @@ export async function adminCreateBusiness(
   return { outcome: r?.r_outcome === "owner_not_found" ? "owner_not_found" : "invalid" };
 }
 
-/** Create a live Type A offer for a business (pilot preset, CFG-11). */
+/** Create a live offer for a business. Type and most days come from settings (CFG-05, CFG-04). */
 export async function adminCreateOffer(
   sql: Sql,
   input: { adminId: string; merchantId: string; name: string; startsAt: string | null; endsAt: string | null },
-): Promise<{ outcome: "ok"; campaignId: string } | { outcome: "not_found" | "invalid" }> {
+): Promise<{ outcome: "ok"; campaignId: string } | { outcome: "not_found" | "invalid" | "too_long" }> {
   if (!input.startsAt || !input.endsAt || !iso(input.startsAt) || !iso(input.endsAt)) return { outcome: "invalid" };
   const rows = await sql.query<{ r_outcome: string; r_campaign_id: string | null }>(
     `select * from trufolks_admin_create_offer($1, $2, $3, $4::timestamptz, $5::timestamptz)`,
@@ -242,5 +260,6 @@ export async function adminCreateOffer(
   );
   const r = rows[0];
   if (r?.r_outcome === "ok" && r.r_campaign_id) return { outcome: "ok", campaignId: r.r_campaign_id };
-  return { outcome: r?.r_outcome === "not_found" ? "not_found" : "invalid" };
+  if (r?.r_outcome === "not_found" || r?.r_outcome === "too_long") return { outcome: r.r_outcome };
+  return { outcome: "invalid" };
 }

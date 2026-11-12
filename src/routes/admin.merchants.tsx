@@ -2,8 +2,8 @@
 // Replaces the dev-only /dev/seed. Plain, unstyled (STITCH-UI-01).
 //
 // The TruFolks team, after checking a business in person, adds it for the
-// owner's existing account (by login email) and creates its offer. Offers are
-// Type A only (CFG-11 pilot preset). The OWNER then accepts the statements and
+// owner's existing account (by login email) and creates its offer. The offer
+// type and the most days it can run come from settings (CFG-05, CFG-04). The OWNER then accepts the statements and
 // makes codes on /merchant — the team can't do that for them (MER-02, MER-07).
 // Every rule is enforced on the server; every step is logged.
 import { useCallback, useEffect, useState, type FormEvent } from "react";

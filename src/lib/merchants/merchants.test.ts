@@ -1,5 +1,5 @@
 // Ticket 6 — merchant dashboard and concierge set-up against a throwaway
-// in-memory PGlite with the real migrations 0001–0008. The funnel is driven the
+// in-memory PGlite with the real migrations 0001–0009. The funnel is driven the
 // real way: admin adds business + offer → owner accepts → codes → scan → claim
 // → photo → admin decides → review.
 import { test, before, after } from "node:test";
@@ -41,6 +41,7 @@ before(async () => {
     "0006_reviews.sql",
     "0007_contacts_feed.sql",
     "0008_merchant_dashboard.sql",
+    "0009_config_presets.sql",
   ]) {
     await db.exec(await readFile(new URL(`../../../migrations/${name}`, import.meta.url), "utf8"));
   }
@@ -88,7 +89,7 @@ async function readyBusiness(tag: string, accept = true): Promise<{ owner: strin
     merchantId,
     name: "Pilot",
     startsAt: dayAgo(),
-    endsAt: daysFromNow(14),
+    endsAt: daysFromNow(12.9), // just under 14 days in all: the pilot preset's most (CFG-04)
   });
   assert.equal(o.outcome, "ok");
   if (accept) {
@@ -226,6 +227,8 @@ test("admin set-up refuses unknown owners, blank names and bad dates", async () 
   assert.equal((await offer({ startsAt: "not a date" })).outcome, "invalid");
   assert.equal((await offer({ name: "" })).outcome, "invalid");
   assert.equal((await offer({ merchantId: "nope" })).outcome, "not_found");
+  // Ticket 7 (CFG-04): longer than the most days allowed.
+  assert.equal((await offer({ startsAt: dayAgo(), endsAt: daysFromNow(14) })).outcome, "too_long");
   assert.equal((await offer({})).outcome, "ok");
 });
 
@@ -298,6 +301,8 @@ test("the dashboard counts the scan-to-review funnel and every rating, with no r
     { made: 7, opened: 6, claimed: 5, pending: 1, verified: 3, rejected: 1, reviews: 3 },
   );
   assert.deepEqual(offer.starCounts, [1, 0, 0, 0, 2]);
+  // Ticket 7 (CFG-04): 4 claims not turned down; rewards on $4.50 = $2 floor each (pending on the typed amount).
+  assert.deepEqual(offer.room, { claims: 4, maxReviews: 50, committedCents: 800, poolCents: 25000 });
 
   assert.equal(biz.reviews.length, 3);
   assert.deepEqual(

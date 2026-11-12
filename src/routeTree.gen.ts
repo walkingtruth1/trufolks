@@ -20,6 +20,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AdminMerchantsRouteImport } from './routes/admin.merchants'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as PeopleUserIdRouteImport } from './routes/people.$userId'
 import { Route as RCodeRouteImport } from './routes/r.$code'
@@ -81,6 +82,11 @@ const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
   path: '/admin/purchases',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof SignUpRoute
   '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/admin/merchants'
     | '/admin/purchases'
+    | '/admin/settings'
     | '/invite/$token'
     | '/people/$userId'
     | '/r/$code'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/admin/merchants'
     | '/admin/purchases'
+    | '/admin/settings'
     | '/invite/$token'
     | '/people/$userId'
     | '/r/$code'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/admin/merchants'
     | '/admin/purchases'
+    | '/admin/settings'
     | '/invite/$token'
     | '/people/$userId'
     | '/r/$code'
@@ -231,6 +243,7 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   AdminMerchantsRoute: typeof AdminMerchantsRoute
   AdminPurchasesRoute: typeof AdminPurchasesRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   InviteTokenRoute: typeof InviteTokenRoute
   PeopleUserIdRoute: typeof PeopleUserIdRoute
   RCodeRoute: typeof RCodeRoute
@@ -317,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPurchasesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
@@ -367,6 +387,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   AdminMerchantsRoute: AdminMerchantsRoute,
   AdminPurchasesRoute: AdminPurchasesRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   InviteTokenRoute: InviteTokenRoute,
   PeopleUserIdRoute: PeopleUserIdRoute,
   RCodeRoute: RCodeRoute,

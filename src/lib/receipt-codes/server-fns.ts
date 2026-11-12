@@ -4,10 +4,12 @@
 // only modules (db, crypto, request helpers) are imported INSIDE handlers so
 // they never reach the browser bundle. Every failure returns a plain message;
 // nothing technical is shown to the person, and raw codes are never logged.
-// No UI calls these yet (scan page is Ticket 3b; merchant screens Ticket 6).
+// Ticket 7: the fraud-check limits come from settings (CFG-11) via
+// getConfiguredSql, and the scan returns the offer's PAY-08 formula so the
+// buyer knows what they get back before buying (Type A, CFG-05).
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
-import { DEVICE_COOKIE_NAME, DEVICE_TOKEN_MAX_AGE_SECONDS, RECEIPT_CODE_LIMITS } from "./limits.ts";
+import { DEVICE_COOKIE_NAME, DEVICE_TOKEN_MAX_AGE_SECONDS } from "./limits.ts";
 import { codeMessage, generateMessage, type CodeOutcome, type GenerateOutcome } from "./messages.ts";
 
 type Fail = { ok: false; reason: Exclude<CodeOutcome, "ok">; message: string };
@@ -28,21 +30,23 @@ function text(data: unknown, name: string, max = 200): string {
 /** Device, network-address hash, keys and db for this request. */
 async function requestContext(createDevice: boolean) {
   const { getCookie, setCookie, getRequestIP } = await import("@tanstack/react-start/server");
-  const { getSql } = await import("@/lib/db");
+  const { getConfiguredSql } = await import("@/lib/config/runtime");
+  const { codeLimitsFrom } = await import("@/lib/config/engine");
   const { getServerHashKeys, hashIp } = await import("./codes.ts");
   const { ensureDevice, findDevice } = await import("./engine.ts");
 
-  const sql = await getSql();
+  const { sql, loaded } = await getConfiguredSql();
+  const limits = codeLimitsFrom(loaded.config);
   const keys = getServerHashKeys();
   // Vercel sets X-Forwarded-For itself, so it can be trusted there.
   const ipHash = hashIp(getRequestIP({ xForwardedFor: true }), keys);
   const rawToken = getCookie(DEVICE_COOKIE_NAME);
 
   if (!createDevice) {
-    return { sql, keys, ipHash, deviceId: await findDevice(sql, rawToken), rateLimited: false };
+    return { sql, keys, ipHash, limits, deviceId: await findDevice(sql, rawToken), rateLimited: false };
   }
-  const device = await ensureDevice(sql, { rawToken, ipHash, limits: RECEIPT_CODE_LIMITS });
-  if (!device.ok) return { sql, keys, ipHash, deviceId: null, rateLimited: true };
+  const device = await ensureDevice(sql, { rawToken, ipHash, limits });
+  if (!device.ok) return { sql, keys, ipHash, limits, deviceId: null, rateLimited: true };
   if (device.newRawToken) {
     // Long-lived device token (HON-07) — deliberately not a session cookie.
     setCookie(DEVICE_COOKIE_NAME, device.newRawToken, {
@@ -53,7 +57,7 @@ async function requestContext(createDevice: boolean) {
       maxAge: DEVICE_TOKEN_MAX_AGE_SECONDS,
     });
   }
-  return { sql, keys, ipHash, deviceId: device.deviceId, rateLimited: false };
+  return { sql, keys, ipHash, limits, deviceId: device.deviceId, rateLimited: false };
 }
 
 function logFailure(where: string, err: unknown) {
@@ -76,14 +80,22 @@ export const scanReceiptCode = createServerFn({ method: "POST" })
         deviceId: ctx.deviceId,
         ipHash: ctx.ipHash,
         keys: ctx.keys,
-        limits: RECEIPT_CODE_LIMITS,
+        limits: ctx.limits,
       });
       if (r.outcome !== "ok") return fail(r.outcome);
+      const { loadCampaignConfig } = await import("@/lib/config/engine");
+      const payout = (await loadCampaignConfig(ctx.sql, r.campaignId)).config.payout;
       return {
         ok: true as const,
         merchantName: r.merchantName,
         campaignName: r.campaignName,
         campaignEndsAt: r.campaignEndsAt,
+        formula: {
+          percentBp: payout.percent_bp,
+          floorCents: payout.floor_cents,
+          capCents: payout.cap_cents,
+          currency: payout.currency,
+        },
       };
     } catch (err) {
       logFailure("scan", err);
@@ -123,7 +135,7 @@ export const claimReceiptCode = createServerFn({ method: "POST" })
           purchasedAt: data.purchasedAt,
         },
         keys: ctx.keys,
-        limits: RECEIPT_CODE_LIMITS,
+        limits: ctx.limits,
       });
       if (r.outcome !== "ok") return fail(r.outcome);
       return { ok: true as const, purchaseId: r.purchaseId, status: "pending_verification" as const };
@@ -156,16 +168,18 @@ export const generateReceiptCodes = createServerFn({ method: "POST" })
       message: generateMessage(reason) ?? "",
     });
     try {
-      const { getSql } = await import("@/lib/db");
+      const { getConfiguredSql } = await import("@/lib/config/runtime");
+      const { codeLimitsFrom } = await import("@/lib/config/engine");
       const { getServerHashKeys } = await import("./codes.ts");
       const { generateCodes } = await import("./engine.ts");
-      const r = await generateCodes(await getSql(), {
+      const { sql, loaded } = await getConfiguredSql();
+      const r = await generateCodes(sql, {
         userId: context.userId,
         campaignId: data.campaignId,
         count: data.count,
         issueMode: data.issueMode,
         keys: getServerHashKeys(),
-        limits: RECEIPT_CODE_LIMITS,
+        limits: codeLimitsFrom(loaded.config),
       });
       if (r.outcome !== "ok") return failGen(r.outcome);
       return { ok: true as const, codes: r.codes };

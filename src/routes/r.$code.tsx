@@ -1,9 +1,11 @@
 // Ticket 3b-2 — the scan page at /r/<code> (BRD v1.6 Journey A, FR-07–FR-09,
 // FR-08a, HON-07, P5, NFR-06). Plain, unstyled on purpose (STITCH-UI-01).
 //
-// No amount or formula is shown here (Tickets 7/8). Every rule lives on the
-// server; this page only calls the existing server functions and shows their
-// plain messages.
+// Ticket 7: the offer's PAY-08 formula is shown before buying (Type A: the
+// buyer knows the reward first). The exact amount needs the receipt, so it is
+// shown on the review page once the purchase is confirmed. Every rule lives on
+// the server; this page only calls the server functions and shows their plain
+// messages.
 //
 // Order: signed in → check for the person's own claim FIRST (a claimed code
 // scans as "used" and would count as a failed try); otherwise scan the code,
@@ -16,6 +18,7 @@ import { getMyClaim, uploadReceiptPhoto } from "@/lib/receipt-codes/photo-server
 import { compressReceiptPhoto, receiptPhotoForm } from "@/lib/receipt-codes/compress-photo";
 import { codeMessage, photoMessage } from "@/lib/receipt-codes/messages";
 import { RECEIPT_PHOTO_LIMITS } from "@/lib/receipt-codes/limits";
+import { formulaText, type FormulaView } from "@/lib/config/preset";
 import {
   claimView,
   dollarsToCents,
@@ -27,7 +30,7 @@ import {
 
 export const Route = createFileRoute("/r/$code")({ component: ScanPage });
 
-type Offer = { merchantName: string; campaignName: string; campaignEndsAt: string };
+type Offer = { merchantName: string; campaignName: string; campaignEndsAt: string; formula: FormulaView };
 
 type Page =
   | { kind: "loading" }
@@ -82,7 +85,12 @@ function ScanPage() {
       } else if (!scan.ok) {
         setPage({ kind: "cant_use", message: scan.message });
       } else {
-        const offer = { merchantName: scan.merchantName, campaignName: scan.campaignName, campaignEndsAt: scan.campaignEndsAt };
+        const offer = {
+          merchantName: scan.merchantName,
+          campaignName: scan.campaignName,
+          campaignEndsAt: scan.campaignEndsAt,
+          formula: scan.formula,
+        };
         setPage({ kind: "ready", offer, view: userId ? "form" : "signed_out", purchaseId: null });
       }
     })();
@@ -120,6 +128,7 @@ function ScanPage() {
           <p>Offer: {page.offer.campaignName}</p>
           <p>Offer ends {formatDay(page.offer.campaignEndsAt)}</p>
           <p className="mt-4">{offerText(page.offer.merchantName)}</p>
+          <p className="mt-2">{formulaText(page.offer.formula)}</p>
         </>
       ) : (
         <h1 className="mb-4 text-2xl font-semibold">Your purchase</h1>
