@@ -147,7 +147,18 @@ function ScanPage() {
       ) : null}
 
       {page.view === "checking" ? <p className="mt-4">Thanks — we're checking your receipt.</p> : null}
-      {page.view === "confirmed" ? <p className="mt-4">Your purchase is confirmed.</p> : null}
+      {page.view === "confirmed" ? (
+        <>
+          <p className="mt-4">Your purchase is confirmed.</p>
+          {page.purchaseId ? (
+            <p className="mt-2">
+              <Link to="/review/$purchaseId" params={{ purchaseId: page.purchaseId }} className="underline">
+                Write your review
+              </Link>
+            </p>
+          ) : null}
+        </>
+      ) : null}
       {page.view === "turned_down" ? (
         <p className="mt-4">We couldn't confirm this purchase from the receipt.</p>
       ) : null}

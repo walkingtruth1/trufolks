@@ -19,6 +19,7 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
 import { Route as DevSeedRouteImport } from './routes/dev.seed'
 import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as ReviewPurchaseIdRouteImport } from './routes/review.$purchaseId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const RCodeRoute = RCodeRouteImport.update({
   path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewPurchaseIdRoute = ReviewPurchaseIdRouteImport.update({
+  id: '/review/$purchaseId',
+  path: '/review/$purchaseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/admin/purchases': typeof AdminPurchasesRoute
   '/dev/seed': typeof DevSeedRoute
   '/r/$code': typeof RCodeRoute
+  '/review/$purchaseId': typeof ReviewPurchaseIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/admin/purchases': typeof AdminPurchasesRoute
   '/dev/seed': typeof DevSeedRoute
   '/r/$code': typeof RCodeRoute
+  '/review/$purchaseId': typeof ReviewPurchaseIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/admin/purchases': typeof AdminPurchasesRoute
   '/dev/seed': typeof DevSeedRoute
   '/r/$code': typeof RCodeRoute
+  '/review/$purchaseId': typeof ReviewPurchaseIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/admin/purchases'
     | '/dev/seed'
     | '/r/$code'
+    | '/review/$purchaseId'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/admin/purchases'
     | '/dev/seed'
     | '/r/$code'
+    | '/review/$purchaseId'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/admin/purchases'
     | '/dev/seed'
     | '/r/$code'
+    | '/review/$purchaseId'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   AdminPurchasesRoute: typeof AdminPurchasesRoute
   DevSeedRoute: typeof DevSeedRoute
   RCodeRoute: typeof RCodeRoute
+  ReviewPurchaseIdRoute: typeof ReviewPurchaseIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review/$purchaseId': {
+      id: '/review/$purchaseId'
+      path: '/review/$purchaseId'
+      fullPath: '/review/$purchaseId'
+      preLoaderRoute: typeof ReviewPurchaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPurchasesRoute: AdminPurchasesRoute,
   DevSeedRoute: DevSeedRoute,
   RCodeRoute: RCodeRoute,
+  ReviewPurchaseIdRoute: ReviewPurchaseIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
