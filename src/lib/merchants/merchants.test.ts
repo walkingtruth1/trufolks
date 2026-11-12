@@ -1,5 +1,5 @@
 // Ticket 6 — merchant dashboard and concierge set-up against a throwaway
-// in-memory PGlite with the real migrations 0001–0009. The funnel is driven the
+// in-memory PGlite with the real migrations 0001–0010. The funnel is driven the
 // real way: admin adds business + offer → owner accepts → codes → scan → claim
 // → photo → admin decides → review.
 import { test, before, after } from "node:test";
@@ -22,6 +22,7 @@ import {
   listBusinessesForAdmin,
 } from "./engine.ts";
 import { MERCHANT_LIMITS } from "./limits.ts";
+import { recordDeposit } from "../payouts/engine.ts";
 import { MERCHANT_OUTCOMES, merchantMessage, PAY_FOR_ANY_RATING_STATEMENT, WALKTHROUGH } from "./messages.ts";
 
 const keys = deriveHashKeys("test-secret-not-real-0123456789abcdef");
@@ -42,6 +43,7 @@ before(async () => {
     "0007_contacts_feed.sql",
     "0008_merchant_dashboard.sql",
     "0009_config_presets.sql",
+    "0010_payout_ledger.sql",
   ]) {
     await db.exec(await readFile(new URL(`../../../migrations/${name}`, import.meta.url), "utf8"));
   }
@@ -92,6 +94,11 @@ async function readyBusiness(tag: string, accept = true): Promise<{ owner: strin
     endsAt: daysFromNow(12.9), // just under 14 days in all: the pilot preset's most (CFG-04)
   });
   assert.equal(o.outcome, "ok");
+  // Ticket 8 (MER-06): the business funds the offer upfront.
+  assert.equal(
+    await recordDeposit(sql, { actorId: "admin1", campaignId: (o as { campaignId: string }).campaignId, amountCents: 25000, note: "test deposit" }),
+    "ok",
+  );
   if (accept) {
     assert.equal(await acceptMerchant(sql, { userId: owner, merchantId, what: "walkthrough" }), "ok");
     assert.equal(await acceptMerchant(sql, { userId: owner, merchantId, what: "terms" }), "ok");
@@ -303,6 +310,8 @@ test("the dashboard counts the scan-to-review funnel and every rating, with no r
   assert.deepEqual(offer.starCounts, [1, 0, 0, 0, 2]);
   // Ticket 7 (CFG-04): 4 claims not turned down; rewards on $4.50 = $2 floor each (pending on the typed amount).
   assert.deepEqual(offer.room, { claims: 4, maxReviews: 50, committedCents: 800, poolCents: 25000 });
+  // Ticket 8: three verified reviews → three $2 payouts, held for the return window.
+  assert.deepEqual(offer.money, { depositedCents: 25000, heldCents: 600, releasedCents: 0, paidCents: 0, forfeitedCents: 0 });
 
   assert.equal(biz.reviews.length, 3);
   assert.deepEqual(

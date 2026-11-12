@@ -1,6 +1,7 @@
 // Ticket 7 — settings, toggle log, startup validation, cooling-off, offer
 // pinning, PAY-08, offer caps and the full disclosure. Each test gets its own
-// throwaway in-memory PGlite with the real migrations 0001–0009. Purchases are
+// throwaway in-memory PGlite with the real migrations 0001–0010 (offers are
+// funded with a deposit, Ticket 8). Purchases are
 // made the real way: admin adds business + offer → owner accepts → codes →
 // scan → claim → photo → admin decides.
 import { test } from "node:test";
@@ -11,6 +12,7 @@ import type { Sql } from "../db.ts";
 import { contactFeed } from "../contacts/engine.ts";
 import { CONTACT_LIMITS } from "../contacts/limits.ts";
 import { acceptMerchant, adminCreateBusiness, adminCreateOffer } from "../merchants/engine.ts";
+import { recordDeposit } from "../payouts/engine.ts";
 import { deriveHashKeys, hashIp } from "../receipt-codes/codes.ts";
 import { claimCode, ensureDevice, generateCodes, scanCode } from "../receipt-codes/engine.ts";
 import { RECEIPT_CODE_LIMITS, RECEIPT_PHOTO_LIMITS } from "../receipt-codes/limits.ts";
@@ -44,6 +46,7 @@ const MIGRATIONS = [
   "0007_contacts_feed.sql",
   "0008_merchant_dashboard.sql",
   "0009_config_presets.sql",
+  "0010_payout_ledger.sql",
 ];
 
 type Ctx = { db: PGlite; sql: Sql; seq: number };
@@ -81,7 +84,11 @@ async function business(c: Ctx, tag: string): Promise<{ owner: string; merchantI
 async function offer(c: Ctx, merchantId: string): Promise<string> {
   const o = await adminCreateOffer(c.sql, { adminId: "admin1", merchantId, name: "Pilot", startsAt: daysFromNow(-1), endsAt: daysFromNow(10) });
   assert.equal(o.outcome, "ok");
-  return (o as { campaignId: string }).campaignId;
+  const campaignId = (o as { campaignId: string }).campaignId;
+  // Ticket 8 (MER-06): fund the offer up to its pool setting.
+  const pool = (await loadCampaignConfig(c.sql, campaignId)).config.campaign.pool_cents;
+  assert.equal(await recordDeposit(c.sql, { actorId: "admin1", campaignId, amountCents: pool, note: "test deposit" }), "ok");
+  return campaignId;
 }
 
 async function codes(c: Ctx, owner: string, campaignId: string, n: number): Promise<string[]> {

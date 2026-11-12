@@ -15,10 +15,12 @@ import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as OfferRouteImport } from './routes/offer'
+import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ShoppersRouteImport } from './routes/shoppers'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AdminMerchantsRouteImport } from './routes/admin.merchants'
+import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -57,6 +59,11 @@ const OfferRoute = OfferRouteImport.update({
   path: '/offer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShoppersRoute = ShoppersRouteImport.update({
   id: '/shoppers',
   path: '/shoppers',
@@ -75,6 +82,11 @@ const SignUpRoute = SignUpRouteImport.update({
 const AdminMerchantsRoute = AdminMerchantsRouteImport.update({
   id: '/admin/merchants',
   path: '/admin/merchants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPayoutsRoute = AdminPayoutsRouteImport.update({
+  id: '/admin/payouts',
+  path: '/admin/payouts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
@@ -120,10 +132,12 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRoute
   '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
+  '/rewards': typeof RewardsRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/admin/merchants': typeof AdminMerchantsRoute
+  '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -139,10 +153,12 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRoute
   '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
+  '/rewards': typeof RewardsRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/admin/merchants': typeof AdminMerchantsRoute
+  '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -159,10 +175,12 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRoute
   '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
+  '/rewards': typeof RewardsRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/admin/merchants': typeof AdminMerchantsRoute
+  '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -180,10 +198,12 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/merchant'
     | '/offer'
+    | '/rewards'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
     | '/admin/merchants'
+    | '/admin/payouts'
     | '/admin/purchases'
     | '/admin/settings'
     | '/invite/$token'
@@ -199,10 +219,12 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/merchant'
     | '/offer'
+    | '/rewards'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
     | '/admin/merchants'
+    | '/admin/payouts'
     | '/admin/purchases'
     | '/admin/settings'
     | '/invite/$token'
@@ -218,10 +240,12 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/merchant'
     | '/offer'
+    | '/rewards'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
     | '/admin/merchants'
+    | '/admin/payouts'
     | '/admin/purchases'
     | '/admin/settings'
     | '/invite/$token'
@@ -238,10 +262,12 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRoute
   MerchantRoute: typeof MerchantRoute
   OfferRoute: typeof OfferRoute
+  RewardsRoute: typeof RewardsRoute
   ShoppersRoute: typeof ShoppersRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   AdminMerchantsRoute: typeof AdminMerchantsRoute
+  AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminPurchasesRoute: typeof AdminPurchasesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   InviteTokenRoute: typeof InviteTokenRoute
@@ -295,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfferRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shoppers': {
       id: '/shoppers'
       path: '/shoppers'
@@ -321,6 +354,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/merchants'
       fullPath: '/admin/merchants'
       preLoaderRoute: typeof AdminMerchantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payouts': {
+      id: '/admin/payouts'
+      path: '/admin/payouts'
+      fullPath: '/admin/payouts'
+      preLoaderRoute: typeof AdminPayoutsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/purchases': {
@@ -382,10 +422,12 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRoute,
   MerchantRoute: MerchantRoute,
   OfferRoute: OfferRoute,
+  RewardsRoute: RewardsRoute,
   ShoppersRoute: ShoppersRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   AdminMerchantsRoute: AdminMerchantsRoute,
+  AdminPayoutsRoute: AdminPayoutsRoute,
   AdminPurchasesRoute: AdminPurchasesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   InviteTokenRoute: InviteTokenRoute,

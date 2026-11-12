@@ -5,7 +5,8 @@
 //   and the pay-for-any-rating statement (MER-02). Codes can't be made before.
 // * Per offer: scan-to-review numbers (MER-05) and every rating (FR-24).
 //   Reviews left and pool left come from the offer's settings (CFG-04, Ticket
-//   7). "Paid back so far" shows "Not set yet" until the payout ledger (Ticket 8).
+//   7). Deposits and paid-back / held / forfeited totals come from the payout
+//   ledger (Ticket 8). Codes can be made only once the offer is funded (MER-06).
 // * Reviews with no reviewer name (P5), every rating, newest first. The
 //   business can't approve, hide or remove a review.
 // * Make receipt codes (existing generateReceiptCodes): shown once as
@@ -207,7 +208,11 @@ function OfferView({ offer: o, canMakeCodes, onChange }: { offer: OfferStats; ca
         ))}
       </ul>
       <dl className="mt-2">
-        <Row label="Paid back so far" value={NOT_SET_YET} />
+        <Row label="Deposited by you" value={formatCents(o.money.depositedCents)} />
+        <Row label="Paid back so far" value={formatCents(o.money.paidCents)} />
+        <Row label="Ready to be paid" value={formatCents(o.money.releasedCents)} />
+        <Row label="Held (return window)" value={formatCents(o.money.heldCents)} />
+        <Row label="Not paid (returned or rule breach)" value={formatCents(o.money.forfeitedCents)} />
         {o.room ? (
           <>
             <Row label="Reviews left in this offer" value={Math.max(0, o.room.maxReviews - o.room.claims)} />
@@ -217,7 +222,13 @@ function OfferView({ offer: o, canMakeCodes, onChange }: { offer: OfferStats; ca
           <Row label="Left in your offer's budget" value={NOT_SET_YET} />
         )}
       </dl>
-      {canMakeCodes && !ended ? <MakeCodes campaignId={o.campaignId} onChange={onChange} /> : null}
+      {canMakeCodes && !ended && o.money.depositedCents > 0 ? <MakeCodes campaignId={o.campaignId} onChange={onChange} /> : null}
+      {canMakeCodes && !ended && o.money.depositedCents <= 0 ? (
+        <p className="mt-4">
+          You can make codes once your deposit for this offer is in. You fund every review's pay-back upfront; the TruFolks
+          team records it.
+        </p>
+      ) : null}
     </div>
   );
 }

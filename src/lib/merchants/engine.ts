@@ -8,6 +8,7 @@ import type { Sql } from "../db.ts";
 import { parseDisclosure } from "../reviews/disclosure.ts";
 import type { MerchantLimits } from "./limits.ts";
 import type { MerchantOutcome } from "./messages.ts";
+import { ownerPayoutTotals } from "../payouts/engine.ts";
 
 function iso(v: unknown): string | null {
   if (v === null || v === undefined) return null;
@@ -33,6 +34,8 @@ export interface OfferStats {
   starCounts: [number, number, number, number, number];
   /** Ticket 7 (CFG-04): the offer's cap and how much of it is used. Null if its settings can't be read. */
   room: { claims: number; maxReviews: number; committedCents: number; poolCents: number } | null;
+  /** Ticket 8: money deposited and paid back for this offer (MER-06, HON-09). */
+  money: { depositedCents: number; heldCents: number; releasedCents: number; paidCents: number; forfeitedCents: number };
 }
 
 /** A review as the business sees it: no reviewer name or id (P5). */
@@ -94,6 +97,8 @@ export async function getDashboard(sql: Sql, input: { userId: string; limits: Me
   }>(`select * from trufolks_owner_reviews($1, $2)`, [input.userId, input.limits.dashboardReviewsMax]);
 
   const n = (v: unknown) => Number(v ?? 0);
+  const totals = await ownerPayoutTotals(sql, { userId: input.userId });
+  const noMoney = { depositedCents: 0, heldCents: 0, releasedCents: 0, paidCents: 0, forfeitedCents: 0 };
   // Ticket 7: cap usage per offer, from the offer's pinned settings (CFG-04).
   const rooms = new Map<string, OfferStats["room"]>();
   for (const s of stats) {
@@ -133,6 +138,7 @@ export async function getDashboard(sql: Sql, input: { userId: string; limits: Me
         reviews: n(s.reviews),
         starCounts: [n(s.stars_1), n(s.stars_2), n(s.stars_3), n(s.stars_4), n(s.stars_5)] as OfferStats["starCounts"],
         room: rooms.get(String(s.campaign_id)) ?? null,
+        money: totals.get(String(s.campaign_id)) ?? noMoney,
       })),
     reviews: reviews
       .filter((r) => r.merchant_id === m.id)

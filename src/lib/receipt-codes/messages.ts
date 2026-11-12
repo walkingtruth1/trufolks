@@ -33,6 +33,7 @@ export const GENERATE_OUTCOMES = [
   "walkthrough_not_accepted",
   "campaign_not_live",
   "campaign_ended",
+  "not_funded",
   "bad_count",
   "unavailable",
 ] as const;
@@ -69,6 +70,8 @@ const GENERATE_MESSAGES: Record<Exclude<GenerateOutcome, "ok">, string> = {
     "Please finish the mixed-ratings walkthrough before making receipt codes.",
   campaign_not_live: "This campaign is switched off, so no new codes can be made for it.",
   campaign_ended: "This campaign has ended, so no new codes can be made for it.",
+  // Ticket 8 (MER-06): the business funds the pool before any code is made.
+  not_funded: "This offer has no money deposited yet, so no codes can be made. The TruFolks team records your deposit first.",
   bad_count: `You can make between 1 and ${RECEIPT_CODE_LIMITS.maxCodesPerBatch} codes at a time.`,
   unavailable: "We couldn't make codes right now. Please try again in a minute.",
 };

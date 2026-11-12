@@ -173,6 +173,10 @@ export const generateReceiptCodes = createServerFn({ method: "POST" })
       const { getServerHashKeys } = await import("./codes.ts");
       const { generateCodes } = await import("./engine.ts");
       const { sql, loaded } = await getConfiguredSql();
+      // Ticket 8 (MER-06): no codes before the business has funded the offer.
+      // (The database budget check also refuses claims on an unfunded offer.)
+      const { offerDepositedCents } = await import("@/lib/payouts/engine");
+      if ((await offerDepositedCents(sql, data.campaignId)) <= 0) return failGen("not_funded");
       const r = await generateCodes(sql, {
         userId: context.userId,
         campaignId: data.campaignId,

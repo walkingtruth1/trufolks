@@ -104,6 +104,11 @@ function Posted({ review }: { review: ReviewView }) {
   return (
     <>
       <p>Your review is posted. Its rating and answers can't be changed now.</p>
+      <p className="mt-2">
+        <Link to="/rewards" className="underline">
+          See what you get back, and when
+        </Link>
+      </p>
       <ReviewCard {...review} />
     </>
   );
