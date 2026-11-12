@@ -12,12 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as BrandsRouteImport } from './routes/brands'
+import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as OfferRouteImport } from './routes/offer'
 import { Route as ShoppersRouteImport } from './routes/shoppers'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
 import { Route as DevSeedRouteImport } from './routes/dev.seed'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as PeopleUserIdRouteImport } from './routes/people.$userId'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as ReviewPurchaseIdRouteImport } from './routes/review.$purchaseId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -35,6 +38,11 @@ const AccountRoute = AccountRouteImport.update({
 const BrandsRoute = BrandsRouteImport.update({
   id: '/brands',
   path: '/brands',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OfferRoute = OfferRouteImport.update({
@@ -67,6 +75,16 @@ const DevSeedRoute = DevSeedRouteImport.update({
   path: '/dev/seed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeopleUserIdRoute = PeopleUserIdRouteImport.update({
+  id: '/people/$userId',
+  path: '/people/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RCodeRoute = RCodeRouteImport.update({
   id: '/r/$code',
   path: '/r/$code',
@@ -87,12 +105,15 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/brands': typeof BrandsRoute
+  '/contacts': typeof ContactsRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/dev/seed': typeof DevSeedRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
   '/review/$purchaseId': typeof ReviewPurchaseIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -101,12 +122,15 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/brands': typeof BrandsRoute
+  '/contacts': typeof ContactsRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/dev/seed': typeof DevSeedRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
   '/review/$purchaseId': typeof ReviewPurchaseIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -116,12 +140,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/brands': typeof BrandsRoute
+  '/contacts': typeof ContactsRoute
   '/offer': typeof OfferRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/dev/seed': typeof DevSeedRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/people/$userId': typeof PeopleUserIdRoute
   '/r/$code': typeof RCodeRoute
   '/review/$purchaseId': typeof ReviewPurchaseIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -132,12 +159,15 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/brands'
+    | '/contacts'
     | '/offer'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
     | '/admin/purchases'
     | '/dev/seed'
+    | '/invite/$token'
+    | '/people/$userId'
     | '/r/$code'
     | '/review/$purchaseId'
     | '/api/auth/$'
@@ -146,12 +176,15 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/brands'
+    | '/contacts'
     | '/offer'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
     | '/admin/purchases'
     | '/dev/seed'
+    | '/invite/$token'
+    | '/people/$userId'
     | '/r/$code'
     | '/review/$purchaseId'
     | '/api/auth/$'
@@ -160,12 +193,15 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/brands'
+    | '/contacts'
     | '/offer'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
     | '/admin/purchases'
     | '/dev/seed'
+    | '/invite/$token'
+    | '/people/$userId'
     | '/r/$code'
     | '/review/$purchaseId'
     | '/api/auth/$'
@@ -175,12 +211,15 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   BrandsRoute: typeof BrandsRoute
+  ContactsRoute: typeof ContactsRoute
   OfferRoute: typeof OfferRoute
   ShoppersRoute: typeof ShoppersRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   AdminPurchasesRoute: typeof AdminPurchasesRoute
   DevSeedRoute: typeof DevSeedRoute
+  InviteTokenRoute: typeof InviteTokenRoute
+  PeopleUserIdRoute: typeof PeopleUserIdRoute
   RCodeRoute: typeof RCodeRoute
   ReviewPurchaseIdRoute: typeof ReviewPurchaseIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -207,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/brands'
       fullPath: '/brands'
       preLoaderRoute: typeof BrandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/offer': {
@@ -251,6 +297,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevSeedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/people/$userId': {
+      id: '/people/$userId'
+      path: '/people/$userId'
+      fullPath: '/people/$userId'
+      preLoaderRoute: typeof PeopleUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$code': {
       id: '/r/$code'
       path: '/r/$code'
@@ -279,12 +339,15 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   BrandsRoute: BrandsRoute,
+  ContactsRoute: ContactsRoute,
   OfferRoute: OfferRoute,
   ShoppersRoute: ShoppersRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   AdminPurchasesRoute: AdminPurchasesRoute,
   DevSeedRoute: DevSeedRoute,
+  InviteTokenRoute: InviteTokenRoute,
+  PeopleUserIdRoute: PeopleUserIdRoute,
   RCodeRoute: RCodeRoute,
   ReviewPurchaseIdRoute: ReviewPurchaseIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
@@ -294,13 +357,10 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-
 import type { createStart } from '@tanstack/react-start'
-
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
-
     router: Awaited<ReturnType<typeof getRouter>>
   }
 }
