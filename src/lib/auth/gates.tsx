@@ -68,7 +68,7 @@ export function SignInButtons() {
   return (
     <a
       href={SIGN_IN_PATH}
-      className="w-full max-w-sm cursor-pointer rounded-md border border-neutral-300 px-4 py-2 text-center hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+      className="w-full max-w-sm cursor-pointer rounded-md border border-neutral/40 px-4 py-2 text-center hover:bg-neutral/10 dark:border-neutral dark:hover:bg-tertiary"
     >
       Sign in
     </a>
@@ -103,7 +103,7 @@ export function UserButton() {
           className="h-8 w-8 rounded-full object-cover"
         />
       ) : (
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-black/10 text-sm font-medium dark:bg-white/20">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-sm font-medium dark:bg-white/20">
           {label.charAt(0).toUpperCase()}
         </span>
       )}

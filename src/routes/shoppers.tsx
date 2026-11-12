@@ -25,17 +25,17 @@ function ShoppersPage() {
             You don’t need followers. You need a product you actually bought and
             something honest to say.
           </p>
-          <ul className="mt-8 max-w-md space-y-4 text-sm leading-relaxed text-moss">
+          <ul className="mt-8 max-w-md space-y-4 text-sm leading-relaxed text-neutral">
             <li>
-              <span className="font-bold text-ink">Receipt first.</span> A real
+              <span className="font-bold text-primary">Receipt first.</span> A real
               purchase, not a gift or a script.
             </li>
             <li>
-              <span className="font-bold text-ink">Film it raw.</span> Phone
+              <span className="font-bold text-primary">Film it raw.</span> Phone
               video, the way you’d tell a friend.
             </li>
             <li>
-              <span className="font-bold text-ink">Get {money(offer.shopper)} if it’s used.</span>{" "}
+              <span className="font-bold text-primary">Get {money(offer.shopper)} if it’s used.</span>{" "}
               The brand pays that when they license the clip. If they pass, nobody
               owes anyone.
             </li>

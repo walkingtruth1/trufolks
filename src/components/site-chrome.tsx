@@ -6,7 +6,7 @@ export function SiteHeader() {
     <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-7 sm:px-10">
       <Link to="/" className="flex items-center gap-3" aria-label="TruFolks home">
         <img
-          src="/trufolks-mark.png"
+          src="/favicon.svg"
           alt=""
           width={46}
           height={46}
@@ -23,21 +23,21 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-ink text-cream">
+    <footer className="bg-tertiary text-canvas">
       <div className="mx-auto max-w-7xl px-5 py-16 sm:px-10 sm:py-20">
-        <p className="text-xs font-semibold tracking-[0.18em] text-lime uppercase">
+        <p className="text-xs font-semibold tracking-[0.18em] text-canvas uppercase">
           Our non-negotiable
         </p>
         <h2 className="mt-5 max-w-4xl text-4xl leading-none font-black tracking-tight uppercase sm:text-6xl">
           The truth has a paper trail.
         </h2>
-        <p className="mt-6 max-w-xl text-base leading-relaxed text-cream/80">
+        <p className="mt-6 max-w-xl text-base leading-relaxed text-canvas/80">
           Not gifted. Not staged. Not paid to pretend. A receipt proves the
           purchase. An honest review tells the rest.
         </p>
-        <div className="mt-12 flex flex-col gap-3 border-t border-cream/20 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-canvas/20 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-lg font-extrabold tracking-tight">TruFolks®</p>
-          <p className="text-xs tracking-wide text-cream/70 uppercase">
+          <p className="text-xs tracking-wide text-canvas/70 uppercase">
             © 2026 TruFolks. Keep it real.
           </p>
         </div>
@@ -48,7 +48,7 @@ export function SiteFooter() {
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-cream text-ink">
+    <div className="min-h-screen bg-canvas text-primary">
       <SiteHeader />
       {children}
       <SiteFooter />

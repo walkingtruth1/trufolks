@@ -42,7 +42,7 @@ function OfferPage() {
           if you use it.
         </p>
 
-        <dl className="mt-10 grid border border-ink sm:grid-cols-4">
+        <dl className="mt-10 grid border border-primary sm:grid-cols-4">
           <Stat k="To look" v={money(0)} />
           <Stat k="To license one clip" v={money(offer.license)} />
           <Stat k="Buyer gets back" v={money(offer.shopper)} />
@@ -57,7 +57,7 @@ function OfferPage() {
             <h2 className="mt-3 text-3xl leading-none font-black tracking-tight uppercase">
               Every checkout. Not a casting call.
             </h2>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-moss">
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-neutral">
               The billion-dollar version is this box on the thank-you page. You
               do not build that first. You sell this pilot by hand. The embed
               comes after brands are already paying to license.
@@ -100,7 +100,7 @@ function OfferPage() {
             <h2 className="mt-3 text-3xl leading-none font-black tracking-tight uppercase">
               Don’t pitch a platform. Pitch one product.
             </h2>
-            <p className="mt-4 text-sm leading-relaxed text-moss">
+            <p className="mt-4 text-sm leading-relaxed text-neutral">
               Ad management comes after the first clip is running. Then you can
               place it on Meta and get paid from their ad budget. Not before.
               Charging to “be the agency” before a license is how this dies.
@@ -124,8 +124,8 @@ function OfferPage() {
 
 function Stat({ k, v }: { k: string; v: string }) {
   return (
-    <div className="border-b border-ink p-4 last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0">
-      <dt className="text-xs font-medium tracking-[0.14em] text-moss uppercase">{k}</dt>
+    <div className="border-b border-primary p-4 last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0">
+      <dt className="text-xs font-medium tracking-[0.14em] text-neutral uppercase">{k}</dt>
       <dd className="mt-2 text-2xl font-black tracking-tight">{v}</dd>
     </div>
   );
@@ -135,7 +135,7 @@ function CopyNote() {
   const [copied, setCopied] = useState(false);
 
   return (
-    <div className="mt-6 border border-ink p-4">
+    <div className="mt-6 border border-primary p-4">
       <p className="text-sm leading-relaxed whitespace-pre-wrap">{note}</p>
       <button
         type="button"
@@ -147,7 +147,7 @@ function CopyNote() {
             setCopied(false);
           }
         }}
-        className="mt-4 bg-lime px-4 py-3 text-sm font-semibold text-ink"
+        className="mt-4 bg-secondary px-4 py-3 text-sm font-semibold text-white"
       >
         {copied ? "Copied" : "Copy the note"}
       </button>

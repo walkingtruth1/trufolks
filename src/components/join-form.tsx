@@ -60,12 +60,12 @@ export function JoinForm({ role }: { role: LeadRole }) {
 
   if (done) {
     return (
-      <div className="border border-ink bg-lime p-6 sm:p-8">
+      <div className="border border-primary bg-secondary/10 p-6 sm:p-8">
         <p className="text-xs font-semibold tracking-[0.18em] uppercase">Saved</p>
         <p className="mt-3 text-2xl leading-tight font-black tracking-tight">
           {text.done}
         </p>
-        <p className="mt-4 text-sm leading-relaxed text-ink/80">
+        <p className="mt-4 text-sm leading-relaxed text-primary/80">
           Your response has been recorded. We'll reach out to your email with next steps soon.
         </p>
       </div>
@@ -73,7 +73,7 @@ export function JoinForm({ role }: { role: LeadRole }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="border border-ink bg-cream p-6 sm:p-8" noValidate>
+    <form onSubmit={onSubmit} className="border border-primary bg-canvas p-6 sm:p-8" noValidate>
       <input type="hidden" name="access_key" value={import.meta.env.VITE_WEB3FORMS_KEY} />
       <input type="hidden" name="subject" value={`New TruFolks ${role} Submission`} />
       <input type="hidden" name="from_name" value="TruFolks Network" />
@@ -85,13 +85,13 @@ export function JoinForm({ role }: { role: LeadRole }) {
         <Field label={text.extra} name="extra" placeholder={text.extraHint} optional />
       </div>
       {error ? (
-        <p className="mt-4 text-sm font-medium text-red-600" role="alert">
+        <p className="mt-4 text-sm font-medium text-crimson" role="alert">
           {error}
         </p>
       ) : null}
       <button
         type="submit"
-        className="mt-6 bg-lime px-5 py-4 text-base font-semibold text-ink transition-transform hover:-translate-y-px"
+        className="mt-6 bg-secondary px-5 py-4 text-base font-semibold text-white transition-transform hover:-translate-y-px"
       >
         {text.submit}
       </button>
@@ -114,7 +114,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 flex items-baseline justify-between text-xs font-semibold tracking-[0.16em] text-moss uppercase">
+      <span className="mb-2 flex items-baseline justify-between text-xs font-semibold tracking-[0.16em] text-neutral uppercase">
         {label}
         {optional ? <span className="tracking-normal normal-case">Optional</span> : null}
       </span>
@@ -123,7 +123,7 @@ function Field({
         type={type}
         placeholder={placeholder}
         autoComplete={name === "email" ? "email" : "name"}
-        className="w-full border border-ink bg-cream px-4 py-3 text-base text-ink outline-none placeholder:text-moss/70 focus:bg-lime/30"
+        className="w-full border border-primary bg-canvas px-4 py-3 text-base text-primary outline-none placeholder:text-neutral/70 focus:bg-secondary/10"
       />
     </label>
   );

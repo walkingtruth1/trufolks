@@ -26,7 +26,7 @@ function BrandsPage() {
         </p>
         <Link
           to="/offer"
-          className="mt-8 inline-block bg-lime px-5 py-4 text-base font-semibold text-ink"
+          className="mt-8 inline-block bg-secondary px-5 py-4 text-base font-semibold text-white"
         >
           Read the pilot
         </Link>

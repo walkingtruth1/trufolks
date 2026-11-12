@@ -14,7 +14,8 @@ export const Route = createRootRoute({
         content:
           "Real purchases. Unscripted reviews. Receipt-verified content connecting everyday shoppers with e-commerce brands.",
       },
-      { name: "theme-color", content: "#f2f1e9" },
+      // TruFolks Core: Dominant Navy (see DESIGN_SYSTEM.md).
+      { name: "theme-color", content: "#0F2A44" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -32,7 +33,7 @@ export const Route = createRootRoute({
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-canvas font-sans text-primary antialiased">
         <PreviewHostBridge />
         <AuthProvider>
           <Outlet />
