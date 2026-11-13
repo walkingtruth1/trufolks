@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "trufolks-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/with-app-env.mjs", "node_modules\\.bin\\vite.cmd", "dev", "--host", "127.0.0.1", "--port", "5180", "--strictPort"],
+      "port": 5180,
+      "autoPort": false,
+      "env": {
+        "BETTER_AUTH_URL": "http://localhost:5180",
+        "TRUFOLKS_ADMIN_EMAILS_DEV": "qa-admin@example.test"
+      }
+    }
+  ]
+}
