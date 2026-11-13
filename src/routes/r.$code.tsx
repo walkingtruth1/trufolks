@@ -1,5 +1,8 @@
 // Ticket 3b-2 — the scan page at /r/<code> (BRD v1.6 Journey A, FR-07–FR-09,
-// FR-08a, HON-07, P5, NFR-06). Plain, unstyled on purpose (STITCH-UI-01).
+// FR-08a, HON-07, P5, NFR-06; APP-17-01). Layout ported from the Stitch Claim
+// Receipt pair (visual reference only, UI-17-01): offer card, then the claim
+// card. Prototype state switchers, claim IDs, an estimated reward before the
+// receipt is checked, one-time-code sign-in and simulated checks are not used.
 //
 // Ticket 7: the offer's PAY-08 formula is shown before buying (Type A: the
 // buyer knows the reward first). The exact amount needs the receipt, so it is
@@ -10,15 +13,32 @@
 // Order: signed in → check for the person's own claim FIRST (a claimed code
 // scans as "used" and would count as a failed try); otherwise scan the code,
 // which also sets the long-lived device cookie.
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, BadgeCheck, Info, Percent, ScanLine, ShieldCheck, Store } from "lucide-react";
+import {
+  Alert,
+  AppPage,
+  btnDark,
+  btnPrimary,
+  btnSecondary,
+  btnSubmit,
+  Card,
+  Chip,
+  inputClass,
+  labelClass,
+  Loading,
+  Note,
+  PageTitle,
+  StatusBadge,
+} from "@/components/ui";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { claimReceiptCode, scanReceiptCode } from "@/lib/receipt-codes/server-fns";
 import { getMyClaim, uploadReceiptPhoto } from "@/lib/receipt-codes/photo-server-fns";
 import { compressReceiptPhoto, receiptPhotoForm } from "@/lib/receipt-codes/compress-photo";
 import { codeMessage, photoMessage } from "@/lib/receipt-codes/messages";
 import { RECEIPT_PHOTO_LIMITS } from "@/lib/receipt-codes/limits";
-import { formulaText, type FormulaView } from "@/lib/config/preset";
+import { formulaTermsText, type FormulaView } from "@/lib/config/preset";
 import {
   claimView,
   dollarsToCents,
@@ -30,7 +50,12 @@ import {
 
 export const Route = createFileRoute("/r/$code")({ component: ScanPage });
 
-type Offer = { merchantName: string; campaignName: string; campaignEndsAt: string; formula: FormulaView };
+type Offer = {
+  merchantName: string;
+  campaignName: string;
+  campaignEndsAt: string;
+  formula: FormulaView;
+};
 
 type Page =
   | { kind: "loading" }
@@ -47,10 +72,6 @@ type Page =
 const PHOTO_NOTE = `Only the TruFolks team sees your receipt photo, to check your purchase. It's deleted after ${retentionDays(
   RECEIPT_PHOTO_LIMITS.retentionSeconds,
 )} days.`;
-
-function offerText(merchantName: string): string {
-  return `${merchantName} pays people back for an honest review of something they just bought. You get the same whether you give 1 star or 5. We check your receipt first, and you'll see exactly what you get back before you write your review.`;
-}
 
 function formatDay(iso: string): string {
   const d = new Date(iso);
@@ -74,7 +95,12 @@ function ScanPage() {
         const mine = await getMyClaim({ data: { code } }).catch(() => ({ ok: false as const }));
         if (!alive) return;
         if (mine.ok) {
-          setPage({ kind: "ready", offer: null, view: claimView(mine), purchaseId: mine.purchaseId });
+          setPage({
+            kind: "ready",
+            offer: null,
+            view: claimView(mine),
+            purchaseId: mine.purchaseId,
+          });
           return;
         }
       }
@@ -101,77 +127,182 @@ function ScanPage() {
 
   if (page.kind === "loading") {
     return (
-      <main className="mx-auto max-w-sm p-6">
-        <p>Loading…</p>
-      </main>
+      <AppPage>
+        <Loading />
+      </AppPage>
     );
   }
 
   if (page.kind === "cant_use") {
     return (
-      <main className="mx-auto max-w-sm p-6">
-        <h1 className="mb-4 text-2xl font-semibold">We can't use this code</h1>
-        <p role="alert">{page.message}</p>
-      </main>
+      <AppPage>
+        <PageTitle eyebrow={`Code ${code}`} title="We can't use this code" />
+        <Alert>{page.message}</Alert>
+        <p className="mt-6 text-sm text-neutral">
+          Need another code? Ask the shop for a new TruFolks code with your receipt.
+        </p>
+      </AppPage>
     );
   }
 
   const here = `/r/${encodeURIComponent(code)}`;
-  const toPhoto = (purchaseId: string, photoError: string) => setPage({ ...page, view: "photo", purchaseId, photoError });
+  const toPhoto = (purchaseId: string, photoError: string) =>
+    setPage({ ...page, view: "photo", purchaseId, photoError });
   const toChecking = () => setPage({ ...page, view: "checking" });
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      {page.offer ? (
-        <>
-          <h1 className="mb-4 text-2xl font-semibold">{page.offer.merchantName}</h1>
-          <p>Offer: {page.offer.campaignName}</p>
-          <p>Offer ends {formatDay(page.offer.campaignEndsAt)}</p>
-          <p className="mt-4">{offerText(page.offer.merchantName)}</p>
-          <p className="mt-2">{formulaText(page.offer.formula)}</p>
-        </>
-      ) : (
-        <h1 className="mb-4 text-2xl font-semibold">Your purchase</h1>
-      )}
+    <AppPage>
+      <div className="flex flex-col gap-6">
+        {page.offer ? (
+          <OfferCard offer={page.offer} />
+        ) : (
+          <PageTitle eyebrow={`Code ${code}`} title="Your purchase" />
+        )}
 
-      {page.view === "signed_out" ? (
-        <>
-          <p className="mt-4">{PHOTO_NOTE}</p>
-          <p className="mt-4">To use this code, sign in or create an account on this phone.</p>
-          <p className="mt-2 flex gap-4">
-            <Link to="/sign-in" search={{ next: here }} className="underline">
-              Sign in
-            </Link>
-            <Link to="/sign-up" search={{ next: here }} className="underline">
-              Create account
-            </Link>
-          </p>
-        </>
-      ) : null}
-
-      {page.view === "form" ? <ClaimForm code={code} onClaimed={toPhoto} onDone={toChecking} /> : null}
-
-      {page.view === "photo" && page.purchaseId ? (
-        <PhotoStep purchaseId={page.purchaseId} initialError={page.photoError ?? null} onDone={toChecking} />
-      ) : null}
-
-      {page.view === "checking" ? <p className="mt-4">Thanks — we're checking your receipt.</p> : null}
-      {page.view === "confirmed" ? (
-        <>
-          <p className="mt-4">Your purchase is confirmed.</p>
-          {page.purchaseId ? (
-            <p className="mt-2">
-              <Link to="/review/$purchaseId" params={{ purchaseId: page.purchaseId }} className="underline">
-                Write your review
-              </Link>
+        {page.view === "signed_out" ? (
+          <Card>
+            <ClaimHeading step="Step 1 of 2" />
+            <p className="mt-3 leading-relaxed">
+              To use this code, sign in or create an account on this phone.
             </p>
-          ) : null}
-        </>
-      ) : null}
-      {page.view === "turned_down" ? (
-        <p className="mt-4">We couldn't confirm this purchase from the receipt.</p>
-      ) : null}
-    </main>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <Link to="/sign-in" search={{ next: here }} className={btnPrimary}>
+                Sign in
+              </Link>
+              <Link to="/sign-up" search={{ next: here }} className={btnSecondary}>
+                Create account
+              </Link>
+            </div>
+            <div className="mt-5">
+              <PrivacyNote />
+            </div>
+          </Card>
+        ) : null}
+
+        {page.view === "form" ? (
+          <ClaimForm code={code} onClaimed={toPhoto} onDone={toChecking} />
+        ) : null}
+
+        {page.view === "photo" && page.purchaseId ? (
+          <PhotoStep
+            purchaseId={page.purchaseId}
+            initialError={page.photoError ?? null}
+            onDone={toChecking}
+          />
+        ) : null}
+
+        {page.view === "checking" ? (
+          <Card>
+            <StatusBadge tone="pending">Being checked</StatusBadge>
+            <h2 className="mt-3 text-xl font-semibold">Thanks — we're checking your receipt.</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral">
+              Come back to this link once it's confirmed to write your review.
+            </p>
+          </Card>
+        ) : null}
+        {page.view === "confirmed" ? (
+          <Card>
+            <StatusBadge tone="ready">Confirmed</StatusBadge>
+            <h2 className="mt-3 text-xl font-semibold">Your purchase is confirmed.</h2>
+            {page.purchaseId ? (
+              <Link
+                to="/review/$purchaseId"
+                params={{ purchaseId: page.purchaseId }}
+                className={btnSubmit + " mt-5"}
+              >
+                Write your review <ArrowRight aria-hidden="true" size={20} />
+              </Link>
+            ) : null}
+          </Card>
+        ) : null}
+        {page.view === "turned_down" ? (
+          <Card>
+            <StatusBadge tone="forfeited">Not confirmed</StatusBadge>
+            <h2 className="mt-3 text-xl font-semibold">
+              We couldn't confirm this purchase from the receipt.
+            </h2>
+          </Card>
+        ) : null}
+      </div>
+    </AppPage>
+  );
+}
+
+/** The offer, shown before the shopper claims (Stitch: dark bar, merchant, rule panels). */
+function OfferCard({ offer }: { offer: Offer }) {
+  return (
+    <Card className="!p-0 md:!p-6">
+      <div className="flex items-center justify-between gap-3 bg-tertiary px-4 py-2 text-canvas md:px-3">
+        <span className={labelClass}>Offer</span>
+        <span className={`${labelClass} text-canvas/70`}>
+          Ends {formatDay(offer.campaignEndsAt)}
+        </span>
+      </div>
+      <div className="flex flex-col gap-4 p-5 md:px-0 md:pt-5 md:pb-0">
+        <div>
+          <p className={`${labelClass} flex items-center gap-1.5 text-neutral`}>
+            <Store aria-hidden="true" size={14} className="text-secondary" />
+            Participating business
+          </p>
+          <h1 className="mt-1 text-2xl leading-8 font-bold tracking-[-0.01em] md:text-[28px] md:leading-9">
+            {offer.merchantName}
+          </h1>
+          <p className="mt-1 text-[15px] font-semibold text-secondary">{offer.campaignName}</p>
+          <p className="mt-3 text-[15px] leading-6 text-neutral">
+            {offer.merchantName} pays people back for an honest review of something they just
+            bought.
+          </p>
+        </div>
+        <Note icon={<Percent size={18} />}>
+          <p className={`${labelClass} text-neutral`}>What you get back</p>
+          <p className="mt-1 text-[15px] font-semibold">{formulaTermsText(offer.formula)}</p>
+        </Note>
+        <div className="flex items-center gap-2 bg-tint-strong px-4 py-3 text-[15px] font-semibold">
+          <BadgeCheck aria-hidden="true" size={18} className="shrink-0 text-secondary" />
+          You get the same whether you give 1 star or 5.
+        </div>
+        <p className="bg-tint px-4 py-3 text-[13px] leading-5">
+          <span className="font-bold">Before you review: </span>
+          We check your receipt first, and you'll see exactly what you get back before you write
+          your review.
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+function ClaimHeading({ step }: { step: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <h2 className="text-xl leading-7 font-bold tracking-[-0.01em] uppercase md:text-2xl">
+        Claim your receipt
+      </h2>
+      <Chip>{step}</Chip>
+    </div>
+  );
+}
+
+function PrivacyNote() {
+  return (
+    <Note icon={<ShieldCheck size={18} />}>
+      <p className={`${labelClass} mb-1`}>Receipt photo privacy</p>
+      <p className="text-[13px] leading-5">{PHOTO_NOTE}</p>
+    </Note>
+  );
+}
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className={labelClass}>
+        {label}{" "}
+        <span className="text-crimson" aria-hidden="true">
+          *
+        </span>
+      </span>
+      {children}
+      {hint ? <span className="text-[13px] leading-5 text-neutral">{hint}</span> : null}
+    </label>
   );
 }
 
@@ -180,25 +311,50 @@ async function sendPhoto(purchaseId: string, file: File): Promise<string | null>
   const small = await compressReceiptPhoto(file);
   if (!small.ok) return photoMessage(small.reason);
   try {
-    const r = await uploadReceiptPhoto({ data: receiptPhotoForm(purchaseId, small.photo, small.header) });
+    const r = await uploadReceiptPhoto({
+      data: receiptPhotoForm(purchaseId, small.photo, small.header),
+    });
     return r.ok ? null : r.message;
   } catch {
     return photoMessage("unavailable");
   }
 }
 
-function PhotoInput({ onPick }: { onPick: (file: File | null) => void }) {
+/** Stitch's receipt drop panel: the whole panel is the file input's label. */
+function PhotoInput({ file, onPick }: { file: File | null; onPick: (file: File | null) => void }) {
   return (
-    <label className="flex flex-col gap-1">
-      Photo of your receipt
-      <input
-        type="file"
-        accept="image/*"
-        className="rounded border px-3 py-2"
-        onChange={(e) => onPick(e.target.files?.[0] ?? null)}
-      />
-      <span>Make sure the business name, date and total are easy to read.</span>
-    </label>
+    <div className="flex flex-col gap-2">
+      <span className={labelClass}>
+        Photo of your receipt{" "}
+        <span className="text-crimson" aria-hidden="true">
+          *
+        </span>
+      </span>
+      <label className="flex cursor-pointer flex-col items-center gap-3 bg-tint px-4 py-8 text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-secondary">
+        <span className="flex h-12 w-12 items-center justify-center bg-secondary/15 text-primary">
+          <ScanLine aria-hidden="true" size={26} />
+        </span>
+        <span className="text-[15px] font-semibold md:text-base">
+          {file ? file.name : "Take or choose a photo of your receipt"}
+        </span>
+        <span className="text-[13px] text-neutral">
+          {file ? "Tap to choose a different photo" : "A clear photo from your phone is fine"}
+        </span>
+        <span className={btnDark + " min-h-9 px-4 py-2"}>
+          {file ? "Change photo" : "Choose photo"}
+        </span>
+        <input
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+        />
+      </label>
+      <Note icon={<Info size={18} />}>
+        <span className="font-bold">Check it's readable: </span>
+        Make sure the business name, date and total are easy to read.
+      </Note>
+    </div>
   );
 }
 
@@ -247,41 +403,47 @@ function ClaimForm({
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-4 flex flex-col gap-3">
-      <p>{PHOTO_NOTE}</p>
-      <label className="flex flex-col gap-1">
-        What did you buy?
-        <input
-          className="rounded border px-3 py-2"
-          value={productLabel}
-          maxLength={200}
-          onChange={(e) => setProductLabel(e.target.value)}
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        What did it cost? (in dollars, like 12.50)
-        <input
-          className="rounded border px-3 py-2"
-          inputMode="decimal"
-          value={cost}
-          onChange={(e) => setCost(e.target.value)}
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        When did you buy it?
-        <input
-          className="rounded border px-3 py-2"
-          type="datetime-local"
-          value={when}
-          onChange={(e) => setWhen(e.target.value)}
-        />
-      </label>
-      <PhotoInput onPick={setFile} />
-      {error ? <p role="alert">{error}</p> : null}
-      <button type="submit" disabled={submitting} className="rounded border px-4 py-2">
-        {submitting ? "Sending…" : "Send"}
-      </button>
-    </form>
+    <Card>
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
+        <ClaimHeading step="Step 1 of 2" />
+        <Field label="What did you buy?">
+          <input
+            className={inputClass}
+            value={productLabel}
+            maxLength={200}
+            onChange={(e) => setProductLabel(e.target.value)}
+          />
+        </Field>
+        <Field label="What did it cost?" hint="In dollars, like 12.50 — the total on your receipt.">
+          <input
+            className={inputClass}
+            inputMode="decimal"
+            value={cost}
+            onChange={(e) => setCost(e.target.value)}
+          />
+        </Field>
+        <Field label="When did you buy it?">
+          <input
+            className={inputClass}
+            type="datetime-local"
+            value={when}
+            onChange={(e) => setWhen(e.target.value)}
+          />
+        </Field>
+        <PhotoInput file={file} onPick={setFile} />
+        <PrivacyNote />
+        {error ? <Alert>{error}</Alert> : null}
+        <button type="submit" disabled={submitting} className={btnSubmit}>
+          {submitting ? (
+            "Sending…"
+          ) : (
+            <>
+              Send <ArrowRight aria-hidden="true" size={20} />
+            </>
+          )}
+        </button>
+      </form>
+    </Card>
   );
 }
 
@@ -314,14 +476,21 @@ function PhotoStep({
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-4 flex flex-col gap-3">
-      <p>Your purchase is saved. We still need a photo of your receipt.</p>
-      <p>{PHOTO_NOTE}</p>
-      <PhotoInput onPick={setFile} />
-      {error ? <p role="alert">{error}</p> : null}
-      <button type="submit" disabled={submitting} className="rounded border px-4 py-2">
-        {submitting ? "Sending…" : error ? "Try again" : "Send photo"}
-      </button>
-    </form>
+    <Card>
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
+        <div>
+          <StatusBadge tone="flagged">Photo needed</StatusBadge>
+          <h2 className="mt-3 text-xl font-semibold">
+            Your purchase is saved. We still need a photo of your receipt.
+          </h2>
+        </div>
+        <PhotoInput file={file} onPick={setFile} />
+        <PrivacyNote />
+        {error ? <Alert>{error}</Alert> : null}
+        <button type="submit" disabled={submitting} className={btnSubmit}>
+          {submitting ? "Sending…" : error ? "Try again" : "Send photo"}
+        </button>
+      </form>
+    </Card>
   );
 }

@@ -19,7 +19,7 @@ export const LOCKED = {
   tertiary: "#0a1f33",
   secondary: "#2563eb",
   neutral: "#5b6b7c",
-  canvas: "#f2f1e9",
+  canvas: "#f4f6f8",
   surface: "#ffffff",
   amber: "#b45309",
   crimson: "#b91c1c",

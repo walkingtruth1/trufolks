@@ -16,7 +16,7 @@
   --color-tertiary: #0a1f33; /* Deep Navy — dark surfaces, borders */
   --color-secondary: #2563eb; /* Royal Blue — interactive accents, focus rings, active states */
   --color-neutral: #5b6b7c; /* Slate — secondary text, muted icons, dividers */
-  --color-canvas: #f2f1e9; /* Warm Cream — page background */
+  --color-canvas: #f4f6f8; /* Cool White — page background (Stitch) */
   --color-surface: #ffffff; /* Card surfaces */
 
   /* Semantic */
@@ -63,4 +63,12 @@
     background: var(--color-secondary);
     color: var(--color-white);
   }
+}
+
+/* Stitch's pale-blue panels, mixed onto white so they stay blue on the cream canvas. */
+@utility bg-tint {
+  background-color: color-mix(in srgb, var(--color-secondary) 8%, var(--color-surface));
+}
+@utility bg-tint-strong {
+  background-color: color-mix(in srgb, var(--color-secondary) 14%, var(--color-surface));
 }

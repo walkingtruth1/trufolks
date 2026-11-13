@@ -15,7 +15,7 @@ Locked by Jack on 11 November 2026. Every screen, component and Google Stitch im
 | `--color-tertiary` | `#0A1F33` | `bg-tertiary` `border-tertiary` | **Deep Navy.** Dark surfaces (footer, dark panels), strong borders |
 | `--color-secondary` | `#2563EB` | `bg-secondary` `text-secondary` `ring-secondary` | **Royal Blue.** Interactive accents, links on light surfaces, focus rings, active/selected states, the main call to action |
 | `--color-neutral` | `#5B6B7C` | `text-neutral` `border-neutral/30` | **Slate.** Secondary text, captions, muted icons, dividers |
-| `--color-canvas` | `#F2F1E9` | `bg-canvas` `text-canvas` | **Warm Cream.** Page background; text on dark surfaces |
+| `--color-canvas` | `#F4F6F8` | `bg-canvas` `text-canvas` | **Cool White** (from the Stitch export; was Warm Cream #F2F1E9 until 12 Nov 2026). Page background; text on dark surfaces |
 | `--color-surface` | `#FFFFFF` | `bg-surface` | Cards, sheets, inputs |
 | `--color-amber` | `#B45309` | `text-amber` `border-amber` | Attention: flagged / on hold |
 | `--color-crimson` | `#B91C1C` | `text-crimson` `border-crimson` | Errors, forfeited, destructive actions |
@@ -64,7 +64,7 @@ Use the status tokens (`text-status-*`, `bg-status-*/10`, `border-status-*`) for
 ## For Google Stitch
 Paste this block into every Stitch prompt:
 
-> Colours: Navy #0F2A44 (primary, headings, buttons), Deep Navy #0A1F33 (dark surfaces), Royal Blue #2563EB (accents, links, focus, main CTA), Slate #5B6B7C (secondary text, dividers), Warm Cream #F2F1E9 background, white #FFFFFF cards, Amber #B45309 (on hold), Crimson #B91C1C (errors / not paid). Font: Inter. Square corners. No green or yellow anywhere. Ratings are not colour-coded.
+> Colours: Navy #0F2A44 (primary, headings, buttons), Deep Navy #0A1F33 (dark surfaces), Royal Blue #2563EB (accents, links, focus, main CTA), Slate #5B6B7C (secondary text, dividers), Cool White #F4F6F8 background, white #FFFFFF cards, Amber #B45309 (on hold), Crimson #B91C1C (errors / not paid). Font: Inter. Square corners. No green or yellow anywhere. Ratings are not colour-coded.
 
 Stitch output is a visual reference only (STITCH-UI-01): rebuild screens with these tokens, don't paste exported colours.
 

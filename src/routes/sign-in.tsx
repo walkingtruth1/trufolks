@@ -1,5 +1,6 @@
 // Ticket 2b — sign-in page. Plain, unstyled on purpose (STITCH-UI-01).
 import { useEffect, useState, type FormEvent } from "react";
+import { AppPage, btnPrimary, inputClass, linkClass } from "@/components/ui";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth/client";
 import { friendlyAuthError, hasErrors, validateSignIn, type FieldErrors } from "@/lib/auth/forms";
@@ -57,41 +58,58 @@ function SignIn() {
   if (alreadySignedIn) return null;
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-4 text-2xl font-semibold">Sign in</h1>
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1">
-          Email
-          <input
-            className="rounded border px-3 py-2"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            aria-invalid={Boolean(errors.email)}
-          />
-          {errors.email ? <span role="alert">{errors.email}</span> : null}
-        </label>
-        <label className="flex flex-col gap-1">
-          Password
-          <input
-            className="rounded border px-3 py-2"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            aria-invalid={Boolean(errors.password)}
-          />
-          {errors.password ? <span role="alert">{errors.password}</span> : null}
-        </label>
-        {formError ? <p role="alert">{formError}</p> : null}
-        <button type="submit" disabled={submitting} className="rounded border px-4 py-2">
-          {submitting ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
-      <p className="mt-4">
-        No account yet? <Link to="/sign-up" search={next ? { next } : {}} className="underline">Sign up</Link>
-      </p>
-    </main>
+    <AppPage>
+      <div className="border border-neutral/30 bg-surface p-5 sm:p-8">
+        <h1 className="mb-5 text-3xl font-black tracking-tight">Sign in</h1>
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1.5 font-semibold">
+            Email
+            <input
+              className={inputClass}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              aria-invalid={Boolean(errors.email)}
+            />
+            {errors.email ? (
+              <span role="alert" className="text-sm font-normal text-crimson">
+                {errors.email}
+              </span>
+            ) : null}
+          </label>
+          <label className="flex flex-col gap-1.5 font-semibold">
+            Password
+            <input
+              className={inputClass}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              aria-invalid={Boolean(errors.password)}
+            />
+            {errors.password ? (
+              <span role="alert" className="text-sm font-normal text-crimson">
+                {errors.password}
+              </span>
+            ) : null}
+          </label>
+          {formError ? (
+            <p role="alert" className="text-sm text-crimson">
+              {formError}
+            </p>
+          ) : null}
+          <button type="submit" disabled={submitting} className={btnPrimary}>
+            {submitting ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+        <p className="mt-4">
+          No account yet?{" "}
+          <Link to="/sign-up" search={next ? { next } : {}} className={linkClass}>
+            Sign up
+          </Link>
+        </p>
+      </div>
+    </AppPage>
   );
 }

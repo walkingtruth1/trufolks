@@ -1,13 +1,15 @@
 // Ticket 5 — one person's full review history at /people/<userId> (BRD v1.6
-// FR-17, HON-08, P1, LEG-01). Plain, unstyled on purpose (STITCH-UI-01).
+// FR-17, HON-08, P1, LEG-01; APP-17-04). No Stitch frame exists for this
+// route; it reuses the shared review card and app components.
 //
-// Only your own page or a contact's. Every rating is shown, newest first,
-// with a count per star, so a pattern (e.g. only 5 stars) stands out without
-// TruFolks accusing anyone. A contact's page only lists reviews whose
-// disclosure is complete; your own page also lists the ones contacts can't
-// see yet, marked as such (gap 19).
+// Only your own page or a friend's (enforced on the server). Every rating is
+// shown, newest first, with a count per star, so a pattern (e.g. only 5 stars)
+// stands out without TruFolks accusing anyone. A friend's page only lists
+// reviews whose disclosure is complete; your own page also lists the ones
+// friends can't see yet, marked as such (gap 19).
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Alert, AppPage, Card, linkClass, Loading, PageTitle, SignInPrompt } from "@/components/ui";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { contactMessage, NOT_SHOWN_YET } from "@/lib/contacts/messages";
 import { getPersonHistory } from "@/lib/contacts/server-fns";
@@ -16,7 +18,10 @@ import { ReviewCard } from "@/lib/reviews/review-card";
 
 export const Route = createFileRoute("/people/$userId")({ component: PersonPage });
 
-type Page = { kind: "loading" } | { kind: "message"; message: string } | { kind: "ready"; history: PersonHistory };
+type Page =
+  | { kind: "loading" }
+  | { kind: "message"; message: string }
+  | { kind: "ready"; history: PersonHistory };
 
 function PersonPage() {
   const { userId: personId } = Route.useParams();
@@ -43,67 +48,80 @@ function PersonPage() {
 
   if (isPending || (userId && page.kind === "loading")) {
     return (
-      <main className="mx-auto max-w-sm p-6">
-        <p>Loading…</p>
-      </main>
+      <AppPage>
+        <Loading />
+      </AppPage>
     );
   }
   if (!userId) {
     return (
-      <main className="mx-auto max-w-sm p-6">
-        <p>Please sign in to see reviews from people you know.</p>
-        <p className="mt-2">
-          <Link to="/sign-in" search={{ next: `/people/${encodeURIComponent(personId)}` }} className="underline">
-            Sign in
-          </Link>
-        </p>
-      </main>
+      <SignInPrompt
+        title="Reviews"
+        body="Please sign in to see reviews from your friends."
+        next={`/people/${encodeURIComponent(personId)}`}
+      />
     );
   }
+  const back = (
+    <p className="mt-6 text-sm">
+      <Link to="/contacts" className={linkClass}>
+        Back to your friends
+      </Link>
+    </p>
+  );
   if (page.kind === "message") {
     return (
-      <main className="mx-auto max-w-sm p-6">
-        <h1 className="mb-4 text-2xl font-semibold">Reviews</h1>
-        <p role="alert">{page.message}</p>
-        <p className="mt-4">
-          <Link to="/contacts" className="underline">
-            Back to your contacts
-          </Link>
-        </p>
-      </main>
+      <AppPage>
+        <PageTitle title="Reviews" />
+        <Alert>{page.message}</Alert>
+        {back}
+      </AppPage>
     );
   }
   if (page.kind !== "ready") return null;
   const { person, reviews, ratingCounts } = page.history;
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-4 text-2xl font-semibold">{person.isSelf ? "Your reviews" : `${person.name}'s reviews`}</h1>
-      <p>
-        {reviews.length} {reviews.length === 1 ? "review" : "reviews"}, newest first.
-      </p>
+    <AppPage>
+      <PageTitle
+        eyebrow={person.isSelf ? "Your reviews" : "Friend"}
+        title={person.isSelf ? "Your reviews" : `${person.name}'s reviews`}
+        intro={`${reviews.length} ${reviews.length === 1 ? "review" : "reviews"}, newest first.`}
+      />
       {reviews.length > 0 ? (
-        <ul className="mt-2" aria-label="Ratings given">
-          {[5, 4, 3, 2, 1].map((stars) => (
-            <li key={stars}>
-              {stars} {stars === 1 ? "star" : "stars"}: {ratingCounts[stars - 1]}
-            </li>
-          ))}
-        </ul>
+        <Card>
+          <h2 className="font-semibold">Every rating given</h2>
+          <ul
+            className="mt-2 grid grid-cols-5 gap-2 text-center text-sm"
+            aria-label="Ratings given"
+          >
+            {[5, 4, 3, 2, 1].map((stars) => (
+              <li key={stars} className="border border-neutral/30 py-2">
+                <span className="block font-semibold">
+                  {stars} {stars === 1 ? "star" : "stars"}
+                </span>
+                <span className="block text-lg font-black">{ratingCounts[stars - 1]}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
       ) : (
-        <p className="mt-2">{person.isSelf ? "You haven't posted a review yet." : "No reviews yet."}</p>
+        <Card>
+          <p>{person.isSelf ? "You haven't posted a review yet." : "No reviews yet."}</p>
+        </Card>
       )}
       {reviews.map((r) => (
-        <div key={r.reviewId}>
-          <ReviewCard {...r} />
-          {person.isSelf && !r.shownToContacts ? <p className="mt-1">{NOT_SHOWN_YET}</p> : null}
-        </div>
+        <ReviewCard
+          key={r.reviewId}
+          {...r}
+          footer={
+            person.isSelf && !r.shownToContacts ? (
+              <span className="text-neutral">{NOT_SHOWN_YET}</span>
+            ) : undefined
+          }
+        />
       ))}
-      <p className="mt-4">
-        <Link to="/contacts" className="underline">
-          Back to your contacts
-        </Link>
-      </p>
-    </main>
+      {back}
+    </AppPage>
   );
 }

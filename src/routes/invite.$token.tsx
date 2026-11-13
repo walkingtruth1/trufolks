@@ -1,8 +1,20 @@
-// Ticket 5 — accept an invite link at /invite/<token> (BRD v1.6 FR-02, P5).
-// Plain, unstyled on purpose (STITCH-UI-01). Opening the link changes nothing;
-// the person sees who invited them and what it means, then taps Accept.
+// Ticket 5 — accept an invite link at /invite/<token> (BRD v1.6 FR-02, P5;
+// APP-17-04). Opening the link changes nothing; the person sees who invited
+// them and what it means, then taps Accept (mutual acceptance). No Stitch
+// frame exists for this route; it reuses the shared app components.
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Alert,
+  AppPage,
+  btnPrimary,
+  Card,
+  linkClass,
+  Loading,
+  PageTitle,
+  SignInPrompt,
+  StatusBadge,
+} from "@/components/ui";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { contactMessage, inviteExplanation } from "@/lib/contacts/messages";
 import { acceptInvite, getInvite } from "@/lib/contacts/server-fns";
@@ -52,55 +64,59 @@ function InvitePage() {
 
   if (isPending || (userId && page.kind === "loading")) {
     return (
-      <main className="mx-auto max-w-sm p-6">
-        <p>Loading…</p>
-      </main>
+      <AppPage>
+        <Loading />
+      </AppPage>
     );
   }
 
   const next = `/invite/${encodeURIComponent(token)}`;
   if (!userId) {
     return (
-      <main className="mx-auto max-w-sm p-6">
-        <h1 className="mb-4 text-2xl font-semibold">You've been invited</h1>
-        <p>Someone you know invited you to be contacts on TruFolks. Sign in or create an account to see who.</p>
-        <p className="mt-2">
-          <Link to="/sign-in" search={{ next }} className="underline">
-            Sign in
-          </Link>{" "}
-          ·{" "}
-          <Link to="/sign-up" search={{ next }} className="underline">
-            Create account
-          </Link>
-        </p>
-      </main>
+      <SignInPrompt
+        title="A friend invited you"
+        body="Someone you know invited you to be friends on TruFolks. Sign in or create an account to see who."
+        next={next}
+        signUp
+      />
     );
   }
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-4 text-2xl font-semibold">Invite</h1>
-      {page.kind === "message" ? <p role="alert">{page.message}</p> : null}
-      {page.kind === "ready" ? (
-        <>
-          <p>{inviteExplanation(page.inviterName)}</p>
-          <button
-            type="button"
-            onClick={() => void onAccept(page.inviterName)}
-            disabled={busy}
-            className="mt-4 rounded border px-4 py-2"
-          >
-            {busy ? "Accepting…" : "Accept"}
-          </button>
-          {error ? <p role="alert" className="mt-2">{error}</p> : null}
-        </>
-      ) : null}
-      {page.kind === "done" ? <p>You and {page.inviterName} are now contacts.</p> : null}
-      <p className="mt-4">
-        <Link to="/contacts" className="underline">
-          Go to your contacts
-        </Link>
-      </p>
-    </main>
+    <AppPage>
+      <PageTitle eyebrow="Invite a friend" title="Friend invite" />
+      <Card>
+        {page.kind === "message" ? <Alert>{page.message}</Alert> : null}
+        {page.kind === "ready" ? (
+          <>
+            <p className="leading-relaxed">{inviteExplanation(page.inviterName)}</p>
+            <button
+              type="button"
+              onClick={() => void onAccept(page.inviterName)}
+              disabled={busy}
+              className={btnPrimary + " mt-5"}
+            >
+              {busy ? "Accepting…" : "Accept"}
+            </button>
+            {error ? (
+              <div className="mt-3">
+                <Alert>{error}</Alert>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+        {page.kind === "done" ? (
+          <>
+            <StatusBadge tone="paid">Friends</StatusBadge>
+            <p className="mt-3 font-semibold">You and {page.inviterName} are now friends.</p>
+          </>
+        ) : null}
+        <p className="mt-5 border-t border-neutral/20 pt-4 text-sm">
+          <Link to="/contacts" className={linkClass}>
+            Go to your friends
+          </Link>
+        </p>
+      </Card>
+    </AppPage>
   );
 }

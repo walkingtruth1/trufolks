@@ -8,3 +8,6 @@ node_modules
 
 # Archives
 *.zip
+
+# Stitch design exports (visual reference only, STITCH-UI-01; not shipped)
+design/stitch/

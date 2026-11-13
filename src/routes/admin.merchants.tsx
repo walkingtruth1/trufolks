@@ -162,7 +162,8 @@ function AddBusiness({ onDone }: { onDone: () => Promise<void> }) {
 }
 
 function AddOffer({ merchantId, onDone }: { merchantId: string; onDone: () => Promise<void> }) {
-  const [name, setName] = useState("Pilot");
+  // Shoppers see this name on the receipt page, so the default avoids "pilot".
+  const [name, setName] = useState("First campaign");
   const [startsAt, setStartsAt] = useState(() => toDateTimeLocalValue(new Date()));
   const [endsAt, setEndsAt] = useState(() => toDateTimeLocalValue(new Date(Date.now() + 14 * 86400_000)));
   const [busy, setBusy] = useState(false);

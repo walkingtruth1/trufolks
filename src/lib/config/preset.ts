@@ -54,7 +54,14 @@ export const PILOT_PRESET_ID = "pilot-preset-1";
 
 export const PILOT_PRESET: AppConfig = deepFreeze({
   schema: 1,
-  payout: { mode: "guaranteed_formula", percent_bp: 2000, floor_cents: 200, cap_cents: 1500, currency: "USD", hold_days: 14 },
+  payout: {
+    mode: "guaranteed_formula",
+    percent_bp: 2000,
+    floor_cents: 200,
+    cap_cents: 1500,
+    currency: "USD",
+    hold_days: 14,
+  },
   campaign: { max_reviews: 50, max_days: 14, pool_cents: 25000 },
   eligibility: { types: ["A"] },
   review_format: { text_qualifies: true, video: "optional", video_extra_tier: false },
@@ -94,7 +101,10 @@ function deepFreeze<T>(value: T): T {
 }
 
 /** PAY-08: min(cap, max(floor, order × percentage)), rounded to the nearest cent. Takes no rating (PAY-01). */
-export function pay08Reward(orderValueCents: number, payout: Pick<AppConfig["payout"], "percent_bp" | "floor_cents" | "cap_cents">): number {
+export function pay08Reward(
+  orderValueCents: number,
+  payout: Pick<AppConfig["payout"], "percent_bp" | "floor_cents" | "cap_cents">,
+): number {
   const raw = Math.floor((orderValueCents * payout.percent_bp + 5000) / 10000);
   return Math.min(payout.cap_cents, Math.max(payout.floor_cents, raw));
 }
@@ -112,10 +122,15 @@ export interface FormulaView {
   currency: string;
 }
 
-/** The PAY-08 formula in plain words, for the buyer before they buy (Type A). */
-export function formulaText(f: FormulaView): string {
+/** The PAY-08 formula terms alone, for pages that already show one rating-blind statement (APP-17-02). */
+export function formulaTermsText(f: FormulaView): string {
   return `You get back ${percentText(f.percentBp)} of what you spend — at least ${formatCents(f.floorCents, f.currency)} and at most ${formatCents(
     f.capCents,
     f.currency,
-  )}. It's the same for 1 star or 5.`;
+  )}.`;
+}
+
+/** The PAY-08 formula in plain words, for the buyer before they buy (Type A). */
+export function formulaText(f: FormulaView): string {
+  return `${formulaTermsText(f)} It's the same for 1 star or 5.`;
 }

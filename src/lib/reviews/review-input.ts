@@ -31,7 +31,7 @@ export function checkReviewInput(raw: Partial<Record<ReviewField, unknown>>, lim
   else if (whatUsed.length > limits.maxShortFieldChars) errors.whatUsed = `Please keep this under ${limits.maxShortFieldChars} characters.`;
   if (!howLong) errors.howLong = "Please say how long, or how much, you used it.";
   else if (howLong.length > limits.maxShortFieldChars) errors.howLong = `Please keep this under ${limits.maxShortFieldChars} characters.`;
-  if (!honestThought) errors.honestThought = "Please write one honest thought, in your own words.";
+  if (!honestThought) errors.honestThought = "Please write what stood out, in your own words.";
   else if (honestThought.length > limits.maxThoughtChars) errors.honestThought = `Please keep this under ${limits.maxThoughtChars} characters.`;
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
