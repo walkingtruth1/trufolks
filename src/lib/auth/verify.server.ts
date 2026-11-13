@@ -1,6 +1,10 @@
 import { getRequest } from "@tanstack/react-start/server";
 import { gateIdentityEnabled } from "./gate-identity.server";
 import { auth, authConfigured } from "./server";
+import { devUserAllowed, grokGateIdentityEnabled } from "./trufolks-auth-mode";
+
+/** TruFolks: Grok gate identity only counts when deliberately enabled. */
+const gateActive = (): boolean => grokGateIdentityEnabled && gateIdentityEnabled();
 
 /**
  * Server-side session resolution (server-only).
@@ -57,7 +61,7 @@ export type VerifiedUser = { id: string; email: string | null };
 export async function getSessionUser(
   bearerToken?: string,
 ): Promise<VerifiedUser | null> {
-  if (!authConfigured && !gateIdentityEnabled()) return null;
+  if (!authConfigured && !gateActive()) return null;
   const request = getRequest();
   if (!request) return null;
   let headers = request.headers;
@@ -82,13 +86,15 @@ export async function getSessionUser(
  * - Auth disabled + no database -> the shared dev user id.
  */
 export async function requireUserId(bearerToken?: string): Promise<string> {
-  if (!authConfigured && !gateIdentityEnabled()) {
+  if (!authConfigured && !gateActive()) {
     if (databaseConfigured) {
       throw new Error(
         "Auth is disabled (VITE_AUTH_ENABLED=false) but DATABASE_URL is set — " +
           "refusing to fall back to the shared dev user against a real database.",
       );
     }
+    // TruFolks: the shared fake user is refused outside tests.
+    if (!devUserAllowed(process.env.NODE_ENV)) throw new UnauthorizedError();
     return DEV_USER_ID;
   }
   const user = await getSessionUser(bearerToken);
