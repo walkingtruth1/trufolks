@@ -19,20 +19,24 @@ const appTabMobile =
  * `site` is the homepage header (section links). `app` keeps the same frame
  * but gives signed-in shoppers tabs for their own pages.
  */
+/** Mobile header links: tighter below 380px so all controls fit at 320px (QA-PR3). */
+const mobileNavLink =
+  "py-2 text-[11px] font-semibold tracking-[0.02em] whitespace-nowrap uppercase min-[380px]:text-xs min-[380px]:tracking-[0.06em]";
+
 export function SiteHeader({ variant = "site" }: { variant?: "site" | "app" }) {
   const { user, isPending } = useCurrentUserState();
   const signedIn = !isPending && Boolean(user);
   if (variant === "app" && signedIn) return <AppTabsHeader />;
   return (
     <header className="fixed top-0 z-50 w-full border-b border-neutral/20 bg-canvas/95 shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 md:h-20 md:px-8">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-3 min-[380px]:gap-3 min-[380px]:px-4 md:h-20 md:px-8">
         <Link to="/" aria-label="TruFolks home" className="shrink-0">
           <img
             src="/brand/trufolks-logo-horizontal-color-200.png"
             alt="TruFolks"
             width={122}
             height={32}
-            className="h-7 w-auto md:h-8"
+            className="h-5 w-auto min-[380px]:h-7 md:h-8"
           />
         </Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-10 md:flex">
@@ -49,18 +53,15 @@ export function SiteHeader({ variant = "site" }: { variant?: "site" | "app" }) {
             FAQ
           </a>
         </nav>
-        <div className="flex items-center gap-3 md:gap-4">
-          <nav aria-label="Main navigation (mobile)" className="flex items-center gap-3 md:hidden">
-            <a
-              href="/#how"
-              className="text-xs font-semibold tracking-[0.06em] whitespace-nowrap text-neutral uppercase"
-            >
+        <div className="flex items-center gap-2 min-[380px]:gap-3 md:gap-4">
+          <nav
+            aria-label="Main navigation (mobile)"
+            className="flex items-center gap-2 min-[380px]:gap-3 md:hidden"
+          >
+            <a href="/#how" className={`${mobileNavLink} text-neutral`}>
               How it works
             </a>
-            <a
-              href="/#merchants"
-              className="text-xs font-semibold tracking-[0.06em] whitespace-nowrap text-secondary uppercase"
-            >
+            <a href="/#merchants" className={`${mobileNavLink} text-secondary`}>
               Merchants
             </a>
           </nav>
@@ -88,14 +89,14 @@ export function SiteHeader({ variant = "site" }: { variant?: "site" | "app" }) {
 function AppTabsHeader() {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-neutral/20 bg-canvas/95 shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 md:h-20 md:px-8">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-3 min-[380px]:gap-3 min-[380px]:px-4 md:h-20 md:px-8">
         <Link to="/" aria-label="TruFolks home" className="shrink-0">
           <img
             src="/brand/trufolks-logo-horizontal-color-200.png"
             alt="TruFolks"
             width={122}
             height={32}
-            className="h-7 w-auto md:h-8"
+            className="h-5 w-auto min-[380px]:h-7 md:h-8"
           />
         </Link>
         <nav aria-label="Your pages" className="hidden items-center gap-2 md:flex">
@@ -106,8 +107,11 @@ function AppTabsHeader() {
             Rewards
           </Link>
         </nav>
-        <div className="flex items-center gap-4">
-          <nav aria-label="Your pages (mobile)" className="flex items-center gap-4 md:hidden">
+        <div className="flex items-center gap-3 min-[380px]:gap-4">
+          <nav
+            aria-label="Your pages (mobile)"
+            className="flex items-center gap-3 min-[380px]:gap-4 md:hidden"
+          >
             <Link to="/contacts" className={appTabMobile}>
               Friends
             </Link>

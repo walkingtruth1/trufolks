@@ -19,6 +19,7 @@ import { emailAndPasswordEnabled, emailAndPasswordOptions } from "./email-passwo
 import { grokGateIdentityEnabled, resolveAuthConfigured } from "./trufolks-auth-mode";
 import { GATE_PROVIDER_ID, gateIdentitySessions } from "./gate-session.server";
 import { pgliteDialect } from "./pglite-dialect";
+import { missingDeploySecret, resolveAuthOrigins } from "./origins";
 
 // Kick (and share) PGLite bootstrap as soon as the auth server module loads.
 void ensureDbReady();
@@ -53,24 +54,18 @@ export const authConfigured = resolveAuthConfigured({
   emailPassword: emailAndPasswordEnabled,
 });
 
-// This app's own Better Auth origin. Deployed: BETTER_AUTH_URL (set in hosting).
-// Local `npm run dev`: loopback on port 8080 only. No Grok sandbox hosts are trusted.
-const explicitBaseURL = env("BETTER_AUTH_URL");
-// Browsers may send Origin as any of these for the same local server.
-const LOCAL_DEV_ORIGINS: string[] = [
-  "http://localhost:8080",
-  "http://127.0.0.1:8080",
-  "http://[::1]:8080",
-];
-const baseURL = explicitBaseURL ?? {
-  allowedHosts: ["localhost", "127.0.0.1", "[::1]"],
-  protocol: "auto" as const,
-  fallback: "http://localhost:8080",
-};
+// This app's own Better Auth origin(s): production = BETTER_AUTH_URL; Vercel
+// preview = that deployment's own URL + branch URL; local = loopback :8080.
+// Missing entries surface as "Invalid origin" on sign-up / sign-in.
+const { baseURL, trustedOrigins } = resolveAuthOrigins(process.env);
 
-// Origins accepted on credentialed POSTs (sign-up / sign-in). Deployed: only the
-// app's own URL. Local: loopback only. Missing entries surface as "Invalid origin".
-const trustedOrigins: string[] = explicitBaseURL ? [explicitBaseURL] : LOCAL_DEV_ORIGINS;
+if (missingDeploySecret(process.env)) {
+  throw new Error(
+    "[auth] BETTER_AUTH_SECRET is not set for this Vercel environment. Add it in " +
+      "Vercel → Project → Settings → Environment Variables (Preview and Production) " +
+      "and redeploy; a per-instance random secret would sign people out between requests.",
+  );
+}
 
 const databaseUrl = env("DATABASE_URL");
 
