@@ -125,9 +125,14 @@ function RewardsPage() {
           <p className="mt-2 text-sm text-neutral">
             Got a receipt with a TruFolks code? Scan it or open its link to start.
           </p>
-          <Link to="/" hash="how" className={btnPrimary + " mt-5"}>
-            How it works
-          </Link>
+          <div className="mt-5 flex flex-wrap items-center gap-4">
+            <Link to="/add-review" hash="claim" className={btnPrimary}>
+              Claim a receipt
+            </Link>
+            <Link to="/how-it-works" hash="rewards" className="text-sm font-semibold text-secondary underline">
+              How rewards work
+            </Link>
+          </div>
         </Card>
       )}
 

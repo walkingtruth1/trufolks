@@ -66,9 +66,9 @@ test("authLinkWithNext encodes the return path, and safeNextPath gives it back u
   assert.equal(authLinkWithNext("/sign-up", ""), "/sign-up");
 });
 
-test("a hostile next value still falls back to /account", () => {
+test("a hostile next value still falls back to /profile", () => {
   const back = new URL(authLinkWithNext("/sign-in", "//evil.example"), "https://x.invalid").searchParams.get("next");
-  assert.equal(safeNextPath(back), "/account");
+  assert.equal(safeNextPath(back), "/profile");
 });
 
 test("scaledSize keeps the shape, caps the longest side and never enlarges", () => {

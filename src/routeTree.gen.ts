@@ -11,22 +11,29 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as AddReviewRouteImport } from './routes/add-review'
 import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as OfferRouteImport } from './routes/offer'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ShoppersRouteImport } from './routes/shoppers'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminMerchantsRouteImport } from './routes/admin.merchants'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as PeopleUserIdRouteImport } from './routes/people.$userId'
+import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as ReviewPurchaseIdRouteImport } from './routes/review.$purchaseId'
+import { Route as ReviewsReviewIdRouteImport } from './routes/reviews.$reviewId'
+import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -39,6 +46,11 @@ const AccountRoute = AccountRouteImport.update({
   path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AddReviewRoute = AddReviewRouteImport.update({
+  id: '/add-review',
+  path: '/add-review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrandsRoute = BrandsRouteImport.update({
   id: '/brands',
   path: '/brands',
@@ -49,6 +61,11 @@ const ContactsRoute = ContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MerchantRoute = MerchantRouteImport.update({
   id: '/merchant',
   path: '/merchant',
@@ -57,6 +74,11 @@ const MerchantRoute = MerchantRouteImport.update({
 const OfferRoute = OfferRouteImport.update({
   id: '/offer',
   path: '/offer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RewardsRoute = RewardsRouteImport.update({
@@ -77,6 +99,11 @@ const SignInRoute = SignInRouteImport.update({
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCatalogRoute = AdminCatalogRouteImport.update({
+  id: '/admin/catalog',
+  path: '/admin/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminMerchantsRoute = AdminMerchantsRouteImport.update({
@@ -109,6 +136,11 @@ const PeopleUserIdRoute = PeopleUserIdRouteImport.update({
   path: '/people/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsSlugRoute = ProductsSlugRouteImport.update({
+  id: '/products/$slug',
+  path: '/products/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RCodeRoute = RCodeRouteImport.update({
   id: '/r/$code',
   path: '/r/$code',
@@ -117,6 +149,16 @@ const RCodeRoute = RCodeRouteImport.update({
 const ReviewPurchaseIdRoute = ReviewPurchaseIdRouteImport.update({
   id: '/review/$purchaseId',
   path: '/review/$purchaseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewsReviewIdRoute = ReviewsReviewIdRouteImport.update({
+  id: '/reviews/$reviewId',
+  path: '/reviews/$reviewId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UHandleRoute = UHandleRouteImport.update({
+  id: '/u/$handle',
+  path: '/u/$handle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -128,65 +170,86 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/add-review': typeof AddReviewRoute
   '/brands': typeof BrandsRoute
   '/contacts': typeof ContactsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
+  '/profile': typeof ProfileRoute
   '/rewards': typeof RewardsRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/catalog': typeof AdminCatalogRoute
   '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
   '/r/$code': typeof RCodeRoute
   '/review/$purchaseId': typeof ReviewPurchaseIdRoute
+  '/reviews/$reviewId': typeof ReviewsReviewIdRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/add-review': typeof AddReviewRoute
   '/brands': typeof BrandsRoute
   '/contacts': typeof ContactsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
+  '/profile': typeof ProfileRoute
   '/rewards': typeof RewardsRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/catalog': typeof AdminCatalogRoute
   '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
   '/r/$code': typeof RCodeRoute
   '/review/$purchaseId': typeof ReviewPurchaseIdRoute
+  '/reviews/$reviewId': typeof ReviewsReviewIdRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/add-review': typeof AddReviewRoute
   '/brands': typeof BrandsRoute
   '/contacts': typeof ContactsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/merchant': typeof MerchantRoute
   '/offer': typeof OfferRoute
+  '/profile': typeof ProfileRoute
   '/rewards': typeof RewardsRoute
   '/shoppers': typeof ShoppersRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/admin/catalog': typeof AdminCatalogRoute
   '/admin/merchants': typeof AdminMerchantsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/people/$userId': typeof PeopleUserIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
   '/r/$code': typeof RCodeRoute
   '/review/$purchaseId': typeof ReviewPurchaseIdRoute
+  '/reviews/$reviewId': typeof ReviewsReviewIdRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -194,86 +257,114 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/add-review'
     | '/brands'
     | '/contacts'
+    | '/how-it-works'
     | '/merchant'
     | '/offer'
+    | '/profile'
     | '/rewards'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/catalog'
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/purchases'
     | '/admin/settings'
     | '/invite/$token'
     | '/people/$userId'
+    | '/products/$slug'
     | '/r/$code'
     | '/review/$purchaseId'
+    | '/reviews/$reviewId'
+    | '/u/$handle'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
+    | '/add-review'
     | '/brands'
     | '/contacts'
+    | '/how-it-works'
     | '/merchant'
     | '/offer'
+    | '/profile'
     | '/rewards'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/catalog'
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/purchases'
     | '/admin/settings'
     | '/invite/$token'
     | '/people/$userId'
+    | '/products/$slug'
     | '/r/$code'
     | '/review/$purchaseId'
+    | '/reviews/$reviewId'
+    | '/u/$handle'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/account'
+    | '/add-review'
     | '/brands'
     | '/contacts'
+    | '/how-it-works'
     | '/merchant'
     | '/offer'
+    | '/profile'
     | '/rewards'
     | '/shoppers'
     | '/sign-in'
     | '/sign-up'
+    | '/admin/catalog'
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/purchases'
     | '/admin/settings'
     | '/invite/$token'
     | '/people/$userId'
+    | '/products/$slug'
     | '/r/$code'
     | '/review/$purchaseId'
+    | '/reviews/$reviewId'
+    | '/u/$handle'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
+  AddReviewRoute: typeof AddReviewRoute
   BrandsRoute: typeof BrandsRoute
   ContactsRoute: typeof ContactsRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   MerchantRoute: typeof MerchantRoute
   OfferRoute: typeof OfferRoute
+  ProfileRoute: typeof ProfileRoute
   RewardsRoute: typeof RewardsRoute
   ShoppersRoute: typeof ShoppersRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  AdminCatalogRoute: typeof AdminCatalogRoute
   AdminMerchantsRoute: typeof AdminMerchantsRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminPurchasesRoute: typeof AdminPurchasesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   InviteTokenRoute: typeof InviteTokenRoute
   PeopleUserIdRoute: typeof PeopleUserIdRoute
+  ProductsSlugRoute: typeof ProductsSlugRoute
   RCodeRoute: typeof RCodeRoute
   ReviewPurchaseIdRoute: typeof ReviewPurchaseIdRoute
+  ReviewsReviewIdRoute: typeof ReviewsReviewIdRoute
+  UHandleRoute: typeof UHandleRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -293,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/add-review': {
+      id: '/add-review'
+      path: '/add-review'
+      fullPath: '/add-review'
+      preLoaderRoute: typeof AddReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/brands': {
       id: '/brands'
       path: '/brands'
@@ -307,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/merchant': {
       id: '/merchant'
       path: '/merchant'
@@ -319,6 +424,13 @@ declare module '@tanstack/react-router' {
       path: '/offer'
       fullPath: '/offer'
       preLoaderRoute: typeof OfferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rewards': {
@@ -347,6 +459,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/catalog': {
+      id: '/admin/catalog'
+      path: '/admin/catalog'
+      fullPath: '/admin/catalog'
+      preLoaderRoute: typeof AdminCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/merchants': {
@@ -391,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeopleUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products/$slug': {
+      id: '/products/$slug'
+      path: '/products/$slug'
+      fullPath: '/products/$slug'
+      preLoaderRoute: typeof ProductsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$code': {
       id: '/r/$code'
       path: '/r/$code'
@@ -403,6 +529,20 @@ declare module '@tanstack/react-router' {
       path: '/review/$purchaseId'
       fullPath: '/review/$purchaseId'
       preLoaderRoute: typeof ReviewPurchaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reviews/$reviewId': {
+      id: '/reviews/$reviewId'
+      path: '/reviews/$reviewId'
+      fullPath: '/reviews/$reviewId'
+      preLoaderRoute: typeof ReviewsReviewIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$handle': {
+      id: '/u/$handle'
+      path: '/u/$handle'
+      fullPath: '/u/$handle'
+      preLoaderRoute: typeof UHandleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -418,22 +558,29 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
+  AddReviewRoute: AddReviewRoute,
   BrandsRoute: BrandsRoute,
   ContactsRoute: ContactsRoute,
+  HowItWorksRoute: HowItWorksRoute,
   MerchantRoute: MerchantRoute,
   OfferRoute: OfferRoute,
+  ProfileRoute: ProfileRoute,
   RewardsRoute: RewardsRoute,
   ShoppersRoute: ShoppersRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  AdminCatalogRoute: AdminCatalogRoute,
   AdminMerchantsRoute: AdminMerchantsRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
   AdminPurchasesRoute: AdminPurchasesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   InviteTokenRoute: InviteTokenRoute,
   PeopleUserIdRoute: PeopleUserIdRoute,
+  ProductsSlugRoute: ProductsSlugRoute,
   RCodeRoute: RCodeRoute,
   ReviewPurchaseIdRoute: ReviewPurchaseIdRoute,
+  ReviewsReviewIdRoute: ReviewsReviewIdRoute,
+  UHandleRoute: UHandleRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

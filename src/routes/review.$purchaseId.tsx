@@ -152,6 +152,11 @@ function Posted({ review }: { review: ReviewView }) {
         <Link to="/rewards" className={btnSubmit + " mt-5 text-base"}>
           See what you get back, and when <ArrowRight aria-hidden="true" size={20} />
         </Link>
+        <p className="mt-4 text-sm">
+          <Link to="/profile" hash={`review-${review.reviewId}`} className="font-semibold text-secondary underline">
+            Pin it to My Top 5, add product details or share it
+          </Link>
+        </p>
       </Card>
       <ReviewCard {...review} />
     </>

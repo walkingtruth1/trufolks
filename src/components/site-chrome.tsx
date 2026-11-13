@@ -8,12 +8,14 @@ import { User } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
 const navLink = "text-[15px] leading-6 text-neutral hover:text-primary";
+const headerCtaBase =
+  "min-h-8 items-center bg-primary px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap text-white uppercase hover:bg-secondary min-[380px]:text-xs md:px-6 md:py-2 md:tracking-[0.06em]";
 
 /** App tabs for signed-in shoppers (Stitch app screens: the active tab is a dark block). */
 const appTab =
   "px-4 py-2 text-xs font-semibold tracking-[0.06em] text-neutral uppercase hover:text-primary [&.active]:bg-primary [&.active]:text-white";
 const appTabMobile =
-  "py-1 text-xs font-semibold tracking-[0.06em] whitespace-nowrap text-neutral uppercase [&.active]:text-secondary [&.active]:underline [&.active]:underline-offset-4";
+  "py-2 text-[11px] font-semibold tracking-[0.02em] whitespace-nowrap text-neutral uppercase min-[380px]:text-xs min-[380px]:tracking-[0.06em] [&.active]:text-secondary [&.active]:underline [&.active]:underline-offset-4";
 
 /**
  * `site` is the homepage header (section links). `app` keeps the same frame
@@ -39,47 +41,62 @@ export function SiteHeader({ variant = "site" }: { variant?: "site" | "app" }) {
             className="h-5 w-auto min-[380px]:h-7 md:h-8"
           />
         </Link>
-        <nav aria-label="Main navigation" className="hidden items-center gap-10 md:flex">
-          <a href="/#how" className={navLink}>
+        <nav aria-label="Main navigation" className="hidden items-center gap-8 md:flex lg:gap-10">
+          <Link to="/how-it-works" className={`${navLink} [&.active]:text-primary [&.active]:underline`}>
             How it works
-          </a>
-          <a href="/#terms" className={navLink}>
-            Offer terms
-          </a>
-          <a href="/#merchants" className={navLink}>
-            For merchants
-          </a>
-          <a href="/#faq" className={navLink}>
+          </Link>
+          {signedIn ? (
+            <Link to="/contacts" className={navLink}>
+              Friends
+            </Link>
+          ) : (
+            <Link to="/how-it-works" hash="merchants" className={navLink}>
+              For merchants
+            </Link>
+          )}
+          <Link to="/how-it-works" hash="faq" className={navLink}>
             FAQ
-          </a>
+          </Link>
         </nav>
         <div className="flex items-center gap-2 min-[380px]:gap-3 md:gap-4">
           <nav
             aria-label="Main navigation (mobile)"
             className="flex items-center gap-2 min-[380px]:gap-3 md:hidden"
           >
-            <a href="/#how" className={`${mobileNavLink} text-neutral`}>
+            <Link to="/how-it-works" className={`${mobileNavLink} text-neutral`}>
               How it works
-            </a>
-            <a href="/#merchants" className={`${mobileNavLink} text-secondary`}>
-              Merchants
-            </a>
-          </nav>
-          {isPending ? null : (
-            <Link
-              to={signedIn ? "/rewards" : "/sign-in"}
-              className="hidden bg-primary px-6 py-2 text-xs font-semibold tracking-[0.06em] text-white uppercase hover:bg-secondary md:inline-flex"
-            >
-              {signedIn ? "Your rewards" : "Sign in"}
             </Link>
+          </nav>
+          {isPending ? null : signedIn ? (
+            <Link to="/profile" className={`${headerCtaBase} inline-flex`}>
+              My Profile
+            </Link>
+          ) : (
+            <>
+              {/* Phones: one Log in button (Get started is the page's own main action). */}
+              <Link to="/sign-in" className={`${headerCtaBase} inline-flex md:hidden`}>
+                Log in
+              </Link>
+              <Link
+                to="/sign-in"
+                className="hidden text-xs font-semibold tracking-[0.06em] text-primary uppercase hover:text-secondary md:inline"
+              >
+                Log in
+              </Link>
+              <Link to="/sign-up" search={{ next: "/profile" }} className={`${headerCtaBase} hidden md:inline-flex`}>
+                Get started
+              </Link>
+            </>
           )}
-          <Link
-            to={signedIn ? "/account" : "/sign-in"}
-            aria-label={signedIn ? "Your account" : "Sign in"}
-            className="flex h-8 w-8 items-center justify-center bg-primary text-white hover:bg-secondary"
-          >
-            <User aria-hidden="true" size={18} />
-          </Link>
+          {signedIn ? (
+            <Link
+              to="/account"
+              aria-label="Account settings"
+              className="hidden h-8 w-8 items-center justify-center bg-primary text-white hover:bg-secondary md:flex"
+            >
+              <User aria-hidden="true" size={18} />
+            </Link>
+          ) : null}
         </div>
       </div>
     </header>
@@ -100,6 +117,9 @@ function AppTabsHeader() {
           />
         </Link>
         <nav aria-label="Your pages" className="hidden items-center gap-2 md:flex">
+          <Link to="/profile" className={appTab}>
+            Profile
+          </Link>
           <Link to="/contacts" className={appTab}>
             Friends
           </Link>
@@ -107,11 +127,14 @@ function AppTabsHeader() {
             Rewards
           </Link>
         </nav>
-        <div className="flex items-center gap-3 min-[380px]:gap-4">
+        <div className="flex items-center gap-2 min-[380px]:gap-4">
           <nav
             aria-label="Your pages (mobile)"
-            className="flex items-center gap-3 min-[380px]:gap-4 md:hidden"
+            className="flex items-center gap-2.5 min-[380px]:gap-4 md:hidden"
           >
+            <Link to="/profile" className={appTabMobile}>
+              Profile
+            </Link>
             <Link to="/contacts" className={appTabMobile}>
               Friends
             </Link>
@@ -120,6 +143,12 @@ function AppTabsHeader() {
             </Link>
           </nav>
           <Link
+            to="/how-it-works"
+            className="hidden text-xs font-semibold tracking-[0.06em] text-neutral uppercase hover:text-primary lg:inline"
+          >
+            How it works
+          </Link>
+          <Link
             to="/account"
             className="hidden text-xs font-semibold tracking-[0.06em] text-primary uppercase hover:text-secondary md:inline [&.active]:text-secondary"
           >
@@ -127,7 +156,7 @@ function AppTabsHeader() {
           </Link>
           <Link
             to="/account"
-            aria-label="Your account"
+            aria-label="Account settings"
             className="flex h-8 w-8 items-center justify-center bg-primary text-white hover:bg-secondary"
           >
             <User aria-hidden="true" size={18} />
@@ -162,19 +191,19 @@ export function SiteFooter() {
             <p className={footHead}>Shoppers</p>
             <ul className="space-y-2">
               <li>
-                <a href="/#how" className={footLink}>
+                <Link to="/how-it-works" className={footLink}>
                   How it works
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/#terms" className={footLink}>
+                <Link to="/how-it-works" hash="terms" className={footLink}>
                   Offer terms
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/#faq" className={footLink}>
+                <Link to="/how-it-works" hash="faq" className={footLink}>
                   FAQ
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -182,13 +211,18 @@ export function SiteFooter() {
             <p className={footHead}>Your account</p>
             <ul className="space-y-2">
               <li>
+                <Link to="/profile" className={footLink}>
+                  My Profile
+                </Link>
+              </li>
+              <li>
                 <Link to="/sign-in" className={footLink}>
-                  Sign in
+                  Log in
                 </Link>
               </li>
               <li>
                 <Link to="/rewards" className={footLink}>
-                  Your rewards
+                  Rewards
                 </Link>
               </li>
               <li>
@@ -218,9 +252,9 @@ export function SiteFooter() {
         </p>
         <div className="flex flex-col items-start justify-between gap-2 border-t border-canvas/15 pt-6 text-[11px] leading-[14px] tracking-[0.05em] md:flex-row md:items-center">
           <p>© 2026 TruFolks. All rights reserved.</p>
-          <a href="/#receipt" className="hover:text-white">
+          <Link to="/how-it-works" hash="receipt" className="hover:text-white">
             Have a receipt? Look up your code
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

@@ -77,7 +77,7 @@ test("return-to path only allows this site", () => {
     "//evil.com", "https://evil.com", "http:/evil.com", "javascript:alert(1)", "/\\evil.com",
     "\\\\evil.com", "/\tevil", "evil.com", "", "   ", "/" + "a".repeat(400), null, 42, undefined,
   ]) {
-    assert.equal(safeNextPath(bad), "/account", `should refuse ${String(bad)}`);
+    assert.equal(safeNextPath(bad), "/profile", `should refuse ${String(bad)}`);
   }
   assert.equal(safeNextPath("//evil.com", "/"), "/");
 });

@@ -5,7 +5,7 @@
 const BASE = "https://trufolks.invalid";
 
 /** A same-site path to go to next, or the fallback. */
-export function safeNextPath(input: unknown, fallback = "/account"): string {
+export function safeNextPath(input: unknown, fallback = "/profile"): string {
   if (typeof input !== "string") return fallback;
   const value = input.trim();
   if (!value || value.length > 300) return fallback;
