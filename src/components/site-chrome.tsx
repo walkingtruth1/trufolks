@@ -247,8 +247,8 @@ export function SiteFooter() {
           </div>
         </div>
         <p className="mb-6 border-t border-canvas/15 pt-6 text-[11px] leading-[14px] tracking-[0.05em] text-canvas/70 md:hidden">
-          Every review on TruFolks shows that the purchase was verified and that a reward was
-          offered. The reward is the same at any rating.
+          Every review on TruFolks is backed by a checked receipt and says whether a reward was
+          offered. Any reward is the same at any rating.
         </p>
         <div className="flex flex-col items-start justify-between gap-2 border-t border-canvas/15 pt-6 text-[11px] leading-[14px] tracking-[0.05em] md:flex-row md:items-center">
           <p>© 2026 TruFolks. All rights reserved.</p>

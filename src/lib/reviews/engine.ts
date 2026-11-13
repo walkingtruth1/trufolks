@@ -56,14 +56,17 @@ type ReviewRow = {
   created_at: unknown;
 };
 
+// v1.8: a receipt-only purchase has no business; its place is the store name the
+// member typed (migration 0012). Read through to_jsonb so these queries also run on
+// schemas from before 0012 (the narrower test suites load only early migrations).
 const REVIEW_SQL = `
-  select r.id as review_id, u.display_name as reviewer_name, m.name as merchant_name,
+  select r.id as review_id, u.display_name as reviewer_name, coalesce(m.name, to_jsonb(vp) ->> 'store_name', '') as merchant_name,
          vp.product_label, r.rating, r.what_used, r.how_long, r.honest_thought,
          vp.verification_status, r.disclosure, r.created_at
     from reviews r
     join users u on u.id = r.user_id
     join verified_purchases vp on vp.id = r.verified_purchase_id
-    join merchants m on m.id = vp.merchant_id`;
+    left join merchants m on m.id = vp.merchant_id`;
 
 function toView(r: ReviewRow): ReviewView {
   return {
@@ -97,11 +100,11 @@ export async function getReviewStart(
     reviewer_name: string;
     disclosure: unknown;
   }>(
-    `select vp.id, vp.verification_status, m.name as merchant_name, c.name as campaign_name,
+    `select vp.id, vp.verification_status, coalesce(m.name, to_jsonb(vp) ->> 'store_name', '') as merchant_name, c.name as campaign_name,
             vp.product_label, vp.purchased_at, u.display_name as reviewer_name,
             trufolks_review_disclosure(vp.id) as disclosure
        from verified_purchases vp
-       join merchants m on m.id = vp.merchant_id
+       left join merchants m on m.id = vp.merchant_id
        join users u on u.id = vp.user_id
        left join campaigns c on c.id = vp.campaign_id
       where vp.id = $1 and vp.user_id = $2`,

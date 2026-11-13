@@ -47,6 +47,8 @@ const MIGRATIONS = [
   "0008_merchant_dashboard.sql",
   "0009_config_presets.sql",
   "0010_payout_ledger.sql",
+  "0011_profiles_top5_catalog.sql",
+  "0012_receipt_only_purchases.sql",
 ];
 
 type Ctx = { db: PGlite; sql: Sql; seq: number };

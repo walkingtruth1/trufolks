@@ -4,11 +4,60 @@
     {
       "name": "trufolks-dev",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["scripts/with-app-env.mjs", "node_modules\\.bin\\vite.cmd", "dev", "--host", "127.0.0.1", "--port", "5180", "--strictPort"],
+      "runtimeArgs": [
+        "scripts/with-app-env.mjs",
+        "node_modules\\.bin\\vite.cmd",
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
       "port": 5180,
       "autoPort": false,
       "env": {
         "BETTER_AUTH_URL": "http://localhost:5180",
+        "TRUFOLKS_ADMIN_EMAILS_DEV": "qa-admin@example.test"
+      }
+    },
+    {
+      "name": "trufolks-dev-qa",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/with-app-env.mjs",
+        "node_modules\\.bin\\vite.cmd",
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5181",
+        "--strictPort"
+      ],
+      "port": 5181,
+      "autoPort": false,
+      "env": {
+        "BETTER_AUTH_URL": "http://localhost:5181",
+        "TRUFOLKS_ADMIN_EMAILS_DEV": "qa-admin@example.test"
+      }
+    },
+    {
+      "name": "trufolks-dev-v18",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/with-app-env.mjs",
+        "node_modules\\.bin\\vite.cmd",
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5182",
+        "--strictPort"
+      ],
+      "port": 5182,
+      "autoPort": false,
+      "env": {
+        "BETTER_AUTH_URL": "http://localhost:5182",
         "TRUFOLKS_ADMIN_EMAILS_DEV": "qa-admin@example.test"
       }
     }

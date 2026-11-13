@@ -445,6 +445,9 @@ export interface MyPurchase {
   purchasedAt: string;
   state: PurchaseState;
   reviewId: string | null;
+  /** v1.8: a receipt sent without a TruFolks code; its review posts by itself once confirmed. */
+  withoutCode: boolean;
+  reviewWaiting: boolean;
 }
 
 /** The person's own purchases, newest first, with where each one stands. */
@@ -460,14 +463,18 @@ export async function myPurchases(sql: Sql, input: { userId: string }): Promise<
     review_id: string | null;
     has_photo: boolean;
     reward_status: string | null;
+    receipt_only: boolean;
+    review_waiting: boolean;
   }>(
-    `select vp.id, vp.verification_status, m.name as merchant_name, vp.product_label, c.name as campaign_name,
-            vp.purchased_at, r.id as review_id,
+    `select vp.id, vp.verification_status, coalesce(m.name, to_jsonb(vp) ->> 'store_name', '') as merchant_name, vp.product_label,
+            c.name as campaign_name, vp.purchased_at, r.id as review_id,
+            vp.merchant_id is null as receipt_only,
+            exists (select 1 from review_drafts d where d.purchase_id = vp.id) as review_waiting,
             exists (select 1 from receipt_photos ph where ph.verified_purchase_id = vp.id) as has_photo,
             case when vp.verification_status = 'verified' and r.id is null
                  then trufolks_review_disclosure(vp.id) -> 'reward' ->> 'status' end as reward_status
        from verified_purchases vp
-       join merchants m on m.id = vp.merchant_id
+       left join merchants m on m.id = vp.merchant_id
        left join campaigns c on c.id = vp.campaign_id
        left join reviews r on r.verified_purchase_id = vp.id
       where vp.user_id = $1
@@ -489,6 +496,8 @@ export async function myPurchases(sql: Sql, input: { userId: string }): Promise<
       purchasedAt: iso(r.purchased_at) ?? "",
       state,
       reviewId: r.review_id,
+      withoutCode: r.receipt_only === true,
+      reviewWaiting: r.review_waiting === true,
     };
   });
 }

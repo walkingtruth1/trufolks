@@ -1,5 +1,5 @@
 // v1.7 — My Profile, Top 5, Shop, catalog and sharing against a throwaway
-// in-memory PGlite with the real migrations 0001–0011. Purchases are made the
+// in-memory PGlite with the real migrations 0001–0012 (v1.8: receipt without a code). Purchases are made the
 // real way: admin adds business + offer + deposit → owner accepts → codes →
 // scan → claim → photo → admin confirms → review. Access is checked for the
 // owner, an accepted friend, a blocked account, an unrelated member and an
@@ -21,6 +21,7 @@ import { RECEIPT_CODE_LIMITS, RECEIPT_PHOTO_LIMITS } from "../receipt-codes/limi
 import { decidePurchase, storePhoto } from "../receipt-codes/photos.ts";
 import { pgliteSql } from "../receipt-codes/test-support.ts";
 import { submitReview } from "../reviews/engine.ts";
+import { submitReceiptReview } from "../reviews/receipt-review.ts";
 import { REVIEW_LIMITS } from "../reviews/limits.ts";
 import {
   adminAddOffer,
@@ -56,6 +57,7 @@ const MIGRATIONS = [
   "0009_config_presets.sql",
   "0010_payout_ledger.sql",
   "0011_profiles_top5_catalog.sql",
+  "0012_receipt_only_purchases.sql",
 ];
 
 type Ctx = { db: PGlite; sql: Sql; seq: number; codes: string[]; owner: string };
@@ -570,5 +572,133 @@ test("Show in Shop: off by default, owner's choice, respects both audiences and 
   assert.deepEqual(me.view.topPicks.products.map((r) => r.reviewId), [a.reviewId]);
   const events = await c.sql.query<{ event: string }>(`select event from profile_events where user_id = 'ana' and event like 'shop_%' order by at, id`);
   assert.deepEqual(events.map((e) => e.event), ["shop_added", "shop_removed"]);
+  await c.db.close();
+});
+
+// ------------------------------------------------------------------ v1.8: a receipt without a code (REV-18-02)
+
+const todayYmd = () => new Date().toISOString().slice(0, 10);
+
+async function sendReceipt(
+  c: Ctx,
+  buyer: string,
+  over: { store?: string; date?: string; photoBytes?: Uint8Array; cap?: number; rating?: number } = {},
+) {
+  return submitReceiptReview(c.sql, {
+    userId: buyer,
+    fields: { rating: over.rating ?? 4, whatUsed: "Oat latte", howLong: "Two visits", honestThought: "Smooth, a bit sweet." },
+    storeName: over.store ?? "Blue Door Coffee",
+    purchasedOn: over.date ?? todayYmd(),
+    photo: over.photoBytes ?? photo(c),
+    header: null,
+    limits: { ...REVIEW_LIMITS, maxReceiptOnlyPerDay: over.cap ?? REVIEW_LIMITS.maxReceiptOnlyPerDay },
+    photoLimits: RECEIPT_PHOTO_LIMITS,
+  });
+}
+
+async function decide(c: Ctx, purchaseId: string, decision: "verified" | "rejected") {
+  const d = await decidePurchase(c.sql, {
+    purchaseId,
+    adminUserId: "admin1",
+    decision,
+    reason: decision === "rejected" ? "Not a receipt" : "",
+    confirmedOrderValueCents: 650,
+    limits: RECEIPT_PHOTO_LIMITS,
+  });
+  assert.equal(d.outcome, "ok");
+}
+
+test("receipt without a code: the review waits, then posts as a Verified purchase once confirmed, with no reward", async () => {
+  const c = await fresh();
+  await befriend(c, "ana", "ben");
+  const sent = await sendReceipt(c, "ana");
+  assert.equal(sent.outcome, "ok");
+  const purchaseId = (sent as { purchaseId: string }).purchaseId;
+
+  // Waiting: no review yet, the purchase says so.
+  let mine = await myPurchases(c.sql, { userId: "ana" });
+  assert.equal(mine[0].purchaseId, purchaseId);
+  assert.equal(mine[0].state, "pending");
+  assert.equal(mine[0].withoutCode, true);
+  assert.equal(mine[0].reviewWaiting, true);
+  assert.equal(mine[0].merchantName, "Blue Door Coffee");
+  assert.equal((await c.sql.query(`select 1 from reviews where verified_purchase_id = $1`, [purchaseId])).length, 0);
+
+  // Confirmed by the team: posts by itself, exactly as written.
+  await decide(c, purchaseId, "verified");
+  mine = await myPurchases(c.sql, { userId: "ana" });
+  assert.equal(mine[0].state, "posted");
+  assert.equal(mine[0].reviewWaiting, false);
+  const reviewId = mine[0].reviewId as string;
+  const handle = await handleOf(c, "ana");
+  type P = { outcome: string; view?: { reviews: { reviewId: string; verifiedPurchase: boolean; merchantName: string; honestThought: string; rating: number; disclosure: { incentive: boolean; complete: boolean; reward: { status: string } } | null }[] } };
+  const own = (await getProfileView(c.sql, { handle, viewerId: "ana" })) as P;
+  const r = own.view?.reviews.find((x) => x.reviewId === reviewId);
+  assert.ok(r);
+  assert.equal(r.verifiedPurchase, true, "Verified purchase, like any checked receipt");
+  assert.equal(r.merchantName, "Blue Door Coffee");
+  assert.equal(r.honestThought, "Smooth, a bit sweet.");
+  assert.equal(r.rating, 4);
+  assert.equal(r.disclosure?.incentive, false, "no offer, so nothing paid");
+  assert.equal(r.disclosure?.reward.status, "none");
+  assert.equal(r.disclosure?.complete, true);
+  assert.equal((await c.sql.query(`select 1 from payouts where review_id = $1`, [reviewId])).length, 0, "no payout");
+  assert.equal((await c.sql.query(`select 1 from review_drafts`)).length, 0, "the waiting words are gone");
+
+  // Shared like any other review: friend sees it, it can be pinned to Top 5.
+  const friend = (await getProfileView(c.sql, { handle, viewerId: "ben" })) as P;
+  assert.ok(friend.view?.reviews.some((x) => x.reviewId === reviewId));
+  assert.equal(await setTopPicks(c.sql, { userId: "ana", list: "products", reviewIds: [reviewId] }), "ok");
+  assertNoPrivateFields(friend);
+  await c.db.close();
+});
+
+test("receipt without a code: not confirmed deletes the words and posts nothing", async () => {
+  const c = await fresh();
+  const sent = (await sendReceipt(c, "ana")) as { outcome: string; purchaseId: string };
+  assert.equal(sent.outcome, "ok");
+  await decide(c, sent.purchaseId, "rejected");
+  const mine = await myPurchases(c.sql, { userId: "ana" });
+  assert.equal(mine[0].state, "rejected");
+  assert.equal((await c.sql.query(`select 1 from reviews`)).length, 0);
+  assert.equal((await c.sql.query(`select 1 from review_drafts`)).length, 0);
+  await c.db.close();
+});
+
+test("receipt without a code: bad input, a reused photo and the daily cap keep nothing", async () => {
+  const c = await fresh();
+  assert.equal((await sendReceipt(c, "ana", { store: "  " })).outcome, "bad_store");
+  assert.equal((await sendReceipt(c, "ana", { date: "2999-01-01" })).outcome, "bad_date");
+  assert.equal((await sendReceipt(c, "ana", { date: "not-a-date" })).outcome, "bad_date");
+  assert.equal((await sendReceipt(c, "ana", { rating: 9 })).outcome, "invalid");
+  assert.equal((await sendReceipt(c, "ana", { photoBytes: new Uint8Array([1, 2, 3]) })).outcome, "bad_photo");
+
+  const same = photo(c);
+  assert.equal((await sendReceipt(c, "ana", { photoBytes: same })).outcome, "ok");
+  assert.equal((await sendReceipt(c, "ben", { photoBytes: same })).outcome, "duplicate_photo", "another account can't reuse it");
+  assert.equal((await c.sql.query(`select 1 from verified_purchases where user_id = 'ben'`)).length, 0, "nothing kept");
+  assert.equal((await c.sql.query(`select 1 from review_drafts where user_id = 'ben'`)).length, 0);
+
+  assert.equal((await sendReceipt(c, "ana", { cap: 2 })).outcome, "ok");
+  assert.equal((await sendReceipt(c, "ana", { cap: 2 })).outcome, "too_many");
+  await c.db.close();
+});
+
+test("receipt without a code: the database refuses a receipt-only purchase with a code, an offer or no place", async () => {
+  const c = await fresh();
+  await assert.rejects(
+    c.sql.query(
+      `insert into verified_purchases (user_id, merchant_id, store_name, product_label, order_value_cents, verification_method, purchased_at)
+       values ('ana', null, null, 'x', 0, 'receipt_photo', now())`,
+    ),
+    "a purchase needs a business or a store name",
+  );
+  await assert.rejects(
+    c.sql.query(
+      `insert into verified_purchases (user_id, merchant_id, store_name, product_label, order_value_cents, verification_method, purchased_at)
+       values ('ana', null, 'Shop', 'x', 0, 'receipt_code_and_photo', now())`,
+    ),
+    "receipt-only is always checked by photo",
+  );
   await c.db.close();
 });

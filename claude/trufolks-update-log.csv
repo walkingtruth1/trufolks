@@ -1,0 +1,21 @@
+#,Date,Type,Version,BRD IDs,Area,Change,Status,Commit,Branch,Verified on,Decided by,Notes
+1,2026-11-11,Release,Ticket 3a,,Receipts,Receipt and claim code engine,Merged,c3618dc,main,Local tests,,
+2,2026-11-11,Release,Ticket 3b-1,,Receipts,Receipt photo verification engine,Merged,8fffd6c,main,Local tests,,
+3,2026-11-11,Release,Ticket 3b-2,,Receipts / Admin,"Scan page, admin purchase review, dev seed",Merged,231b750,main,Local tests,,
+4,2026-11-11,Release,Ticket 4,FR-11; FR-12,Reviews,Review submission and immutability rules,Merged,ac9378b,main,Local tests,,
+5,2026-11-11,Release,Ticket 5,FR-02; FR-03,Friends,"Invite links, mutual contacts, filtered feed",Merged,51ede14,main,Local tests,,
+6,2026-11-11,Release,Ticket 6,,Merchants,Merchant dashboard and concierge onboarding,Merged,8aa6c5c,main,Local tests,,
+7,2026-11-11,Release,Ticket 7,PAY-08,Settings,"Versioned settings, reward math, offer caps",Merged,e81b171,main,Local tests,,
+8,2026-11-11,Release,Ticket 8,HON-09; PAY-06,Payouts,"Payout ledger, deposits, settlement",Merged,679cd04,main,Local tests,,
+9,2026-11-11,Release,Design,,Design system,Locked TruFolks Core design system; legacy palette removed,Merged,a611825,main,Local tests,,
+10,2026-11-12,Release,Brand,,Brand,TruFolks logo kit in Core colours,Merged,2c3424f,main,,,
+11,2026-11-12,Release,Stitch UI,,UI,Stitch designs ported for homepage and app pages,Merged,92942fc,main,,,
+12,2026-11-13,Release,QA fixes,,QA,"Fail fast without deploy database, trust preview URLs for sign-in, header fits 320px",Merged,2321ce7,main,,,
+13,2026-11-13,Decision,v1.7,,Homepage,"Keep headline ""Find something worth trying.""; drop ""Share your top recommendations.""; How It Works is its own page",Done,6c3c5e0,feat/profile-v1.7,,Owner,Stitch Merchant Offer Terms Preview stays out
+14,2026-11-13,Decision,v1.7,PRO-18-02,Profile,"Editable name and bio marked implemented; editable avatar stays open",Done (avatar open),6c3c5e0,feat/profile-v1.7,,Owner,
+15,2026-11-13,Decision,v1.7,PRO-18-04; SOC-17-02; CAT-18-01; FR-23; REV-18-01; FR-12,BRD,"BRD ID cleanup: SOC-17-02 keeps its meaning; Top 5 by category is PRO-18-04; catalog is CAT-18-01 (FR-23 historical); firsthand review and video is REV-18-01 (FR-12 historical)",Done,6c3c5e0,feat/profile-v1.7,,Owner,See claude/trufolks-handover-v1.7-profile.md
+16,2026-11-13,Release,v1.7,PRO-18-*; CAT-18-01,Profile,"My Profile, Top 5, Show in Shop (off by default), catalog, sharing, How It Works page",Pushed - awaiting merge,6c3c5e0,feat/profile-v1.7,"Vercel preview: owner, friend and signed-out Shop check (8 steps) passed; display name persists",Owner,Migration 0011 has run on the preview database; schema changes now need 0012+
+17,2026-11-13,Fix,v1.7.1,,Settings,"Admin settings label now says new reviews start Friends only and can be made public one at a time (was ""Contacts only, wider sharing isn't built"")",In progress,(uncommitted),feat/profile-v1.7,Config tests,,
+18,2026-11-13,Decision,v1.8,REV-18-02,Reviews,"Every review needs a checked receipt; a TruFolks code is optional (promo-code style, at the end). Rejected: reviews with no receipt, and optional receipts (both would blur what Verified purchase means)",Decided,,,,Owner,"Gifts/services without receipts parked as a possible separate feature, not in Add a review"
+19,2026-11-13,Process,,,Docs,"BRD v1.7 frozen as the baseline; changes are tracked in this log and rolled into the next BRD version",Proposed,,,,,
+20,2026-11-13,Release,v1.8,REV-18-02,Reviews,"Add a review: write, then add your receipt (store, date, photo), then preview and send. No code: team checks the receipt, review posts by itself as Verified purchase with no reward. With a code: existing claim flow and reward, words kept on the device. Footer and How It Works wording now say whether a reward was offered",Built - not committed,(uncommitted),feat/profile-v1.7,"240/240 tests, typecheck, build; local browser walkthrough at 320/390/1440, admin approval, no console errors",Owner,"Migration 0012_receipt_only_purchases (not yet run on any shared database)"

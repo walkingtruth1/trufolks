@@ -533,12 +533,12 @@ function Friends() {
               {
                 icon: BadgeCheck,
                 h: "Verified purchase",
-                b: "The receipt was checked before the review could be written.",
+                b: "The receipt was checked before the review went up.",
               },
               {
                 icon: ReceiptText,
                 h: "Reward disclosed",
-                b: "Friends can see a reward was offered for the review, whatever the rating.",
+                b: "Friends can see whether a reward was offered for the review. It’s the same whatever the rating.",
               },
             ].map((c) => (
               <div key={c.h} className="md:border md:border-secondary/15 md:bg-surface md:p-4">
@@ -813,7 +813,7 @@ const faqs = [
   },
   {
     q: "Who sees my review?",
-    a: "Your friends on TruFolks — people who accepted an invite from you or sent you one. Every review shows that the purchase was verified and that a reward was offered.",
+    a: "Your friends on TruFolks — people who accepted an invite from you or sent you one. Every review shows that the purchase was verified, and whether a reward was offered.",
   },
   {
     q: "What if I return what I bought?",

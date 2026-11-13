@@ -23,6 +23,7 @@ const HERE = "/admin/purchases";
 type Pending = {
   purchaseId: string;
   merchantName: string;
+  receiptOnly?: boolean;
   campaignName: string | null;
   productLabel: string;
   typedOrderValueCents: number;
@@ -169,11 +170,18 @@ function PurchaseCard({ purchase: p, onDecided }: { purchase: Pending; onDecided
   return (
     <section className="mt-6 border-t pt-4">
       <h2 className="text-lg font-semibold">{p.merchantName}</h2>
-      <p>Offer: {p.campaignName ?? "—"}</p>
+      {p.receiptOnly ? (
+        <p className="mt-1 bg-tint p-2 text-sm">
+          Receipt only: no TruFolks code, no offer, nothing paid back. Check the store name, date and item match the
+          receipt. Once approved, the review they already wrote posts by itself.
+        </p>
+      ) : (
+        <p>Offer: {p.campaignName ?? "—"}</p>
+      )}
       <p>What they bought: {p.productLabel}</p>
-      <p>Amount they typed: {formatCents(p.typedOrderValueCents, p.currency)}</p>
-      <p>Bought at: {when(p.purchasedAt)}</p>
-      <p>Claimed at: {when(p.claimedAt)}</p>
+      {p.receiptOnly ? null : <p>Amount they typed: {formatCents(p.typedOrderValueCents, p.currency)}</p>}
+      <p>{p.receiptOnly ? "Date they gave" : "Bought at"}: {when(p.purchasedAt)}</p>
+      {p.receiptOnly ? null : <p>Claimed at: {when(p.claimedAt)}</p>}
       <p>Photo taken at: {p.hasPhoto ? (p.exifTakenAt ? when(p.exifTakenAt) : "No date on the photo") : "No photo yet"}</p>
       {p.checks.length > 0 ? (
         <>

@@ -36,14 +36,14 @@ export const SETTING_FIELDS: Field[] = [
   { path: "funding.platform_fee_waived", label: "TruFolks fee waived", kind: "bool", scope: "offer" },
   { path: "split_test.enabled", label: "Split test on", kind: "bool", scope: "offer" },
   { path: "split_test.unit", label: "Split by", kind: "choice", choices: ["merchant", "cohort"], scope: "offer", help: "Never by individual." },
-  { path: "visibility.scope", label: "Who sees reviews", kind: "locked", scope: "global", help: "Contacts only. Wider sharing isn't built." },
+  { path: "visibility.scope", label: "Who sees a new review", kind: "locked", scope: "global", help: "Friends only to start. The owner can make any review public, one at a time, once their profile is public (v1.7)." },
   { path: "disclosure.wording_version", label: "Disclosure wording label", kind: "text", scope: "global" },
   {
     path: "disclosure.wording_approved",
     label: "Wording approved by the lawyer",
     kind: "bool",
     scope: "global",
-    help: "Reviews are shown to contacts only when this is on.",
+    help: "No review can be shared, with friends or publicly, until this is on.",
   },
   {
     path: "disclosure.lines",

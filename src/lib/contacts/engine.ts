@@ -25,7 +25,7 @@ type ContactReviewRow = {
   review_id: string;
   author_id: string;
   reviewer_name: string;
-  merchant_id: string;
+  merchant_id: string | null;
   merchant_name: string;
   product_label: string;
   rating: number;
@@ -246,6 +246,7 @@ export async function contactPlaces(sql: Sql, input: { viewerId: string }): Prom
     `select merchant_id, max(merchant_name) as merchant_name, count(*) as review_count,
             count(distinct author_id) as contact_count, max(created_at) as latest_at
        from trufolks_contact_reviews($1)
+      where merchant_id is not null
       group by merchant_id
       order by max(created_at) desc, merchant_id
       limit 100`,
@@ -292,12 +293,12 @@ export async function personHistory(
     name = me[0]?.display_name;
     rows = await sql.query<ContactReviewRow>(
       `select r.id as review_id, r.user_id as author_id, u.display_name as reviewer_name, m.id as merchant_id,
-              m.name as merchant_name, vp.product_label, r.rating, r.what_used, r.how_long, r.honest_thought,
+              coalesce(m.name, to_jsonb(vp) ->> 'store_name', '') as merchant_name, vp.product_label, r.rating, r.what_used, r.how_long, r.honest_thought,
               vp.verification_status, r.disclosure, r.created_at
          from reviews r
          join users u on u.id = r.user_id
          join verified_purchases vp on vp.id = r.verified_purchase_id
-         join merchants m on m.id = vp.merchant_id
+         left join merchants m on m.id = vp.merchant_id
         where r.user_id = $1
         order by r.created_at desc, r.id desc
         limit $2`,

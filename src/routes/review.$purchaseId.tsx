@@ -12,7 +12,7 @@
 // if the amount isn't known yet, writing is blocked (gap 20).
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BadgeCheck, Scale, Star } from "lucide-react";
+import { ArrowRight, BadgeCheck, Scale } from "lucide-react";
 import {
   Alert,
   AppPage,
@@ -21,7 +21,6 @@ import {
   btnSubmit,
   Card,
   Chip,
-  inputClass,
   labelClass,
   Loading,
   Note,
@@ -35,6 +34,8 @@ import { REVIEW_LIMITS } from "@/lib/reviews/limits";
 import { RATING_BLIND_STATEMENT, reviewMessage } from "@/lib/reviews/messages";
 import { checkReviewInput, type ReviewField, type ReviewInput } from "@/lib/reviews/review-input";
 import { ReviewCard } from "@/lib/reviews/review-card";
+import { ReviewFields } from "@/lib/reviews/review-fields";
+import { clearDraft, loadDraft } from "@/lib/reviews/draft";
 import { formulaTermsText } from "@/lib/config/preset";
 import { formatCents } from "@/lib/receipt-codes/form-input";
 import type { ReviewStart, ReviewView } from "@/lib/reviews/engine";
@@ -134,6 +135,7 @@ function ReviewPage() {
       ) : (
         <Writer
           start={start}
+          userId={userId}
           onPosted={(review) => setPage({ kind: "ready", start: { ...start, review } })}
         />
       )}
@@ -187,16 +189,25 @@ function WhatYouGetBack({ start }: { start: ReviewStart }) {
 
 const EMPTY = { rating: 0, whatUsed: "", howLong: "", honestThought: "" };
 
-const fieldError = "text-sm font-normal text-crimson";
 
 function Writer({
   start,
+  userId,
   onPosted,
 }: {
   start: ReviewStart;
+  userId: string;
   onPosted: (review: ReviewView) => void;
 }) {
   const [draft, setDraft] = useState<ReviewInput>(EMPTY);
+  const [restored, setRestored] = useState(false);
+  // v1.8: someone who wrote first on Add a review, then added a receipt code.
+  useEffect(() => {
+    const saved = loadDraft(userId);
+    if (!saved) return;
+    setDraft({ rating: saved.rating, whatUsed: saved.whatUsed, howLong: saved.howLong, honestThought: saved.honestThought });
+    setRestored(true);
+  }, [userId]);
   const [errors, setErrors] = useState<Partial<Record<ReviewField, string>>>({});
   const [preview, setPreview] = useState<ReviewInput | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -234,6 +245,7 @@ function Writer({
         }
         return;
       }
+      clearDraft(userId);
       onPosted(r.review);
     } finally {
       setPosting(false);
@@ -303,111 +315,10 @@ function Writer({
       </section>
 
       <div className="mt-3 flex flex-col gap-8">
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-base font-semibold">
-            Your star rating{" "}
-            <span className="text-crimson" aria-hidden="true">
-              *
-            </span>
-          </legend>
-          {/* Every rating uses the same unselected control and the same path (APP-17-02). */}
-          <div className="grid grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <label
-                key={n}
-                className="flex min-h-16 cursor-pointer flex-col items-center justify-center gap-1 border border-neutral/40 bg-surface px-1 py-2 text-xl font-semibold has-[:checked]:border-2 has-[:checked]:border-secondary has-[:checked]:bg-tint-strong has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-secondary"
-              >
-                <input
-                  type="radio"
-                  name="rating"
-                  value={n}
-                  checked={draft.rating === n}
-                  onChange={() => set("rating", n)}
-                  className="sr-only"
-                />
-                <span aria-hidden="true">{n}</span>
-                <Star
-                  aria-hidden="true"
-                  size={14}
-                  className={draft.rating === n ? "fill-secondary text-secondary" : "text-primary"}
-                />
-                <span className="sr-only">{n === 1 ? "1 star" : `${n} stars`}</span>
-              </label>
-            ))}
-          </div>
-          {errors.rating ? (
-            <span role="alert" className={fieldError}>
-              {errors.rating}
-            </span>
-          ) : null}
-        </fieldset>
-
-        <label className="flex flex-col gap-2 text-base font-semibold">
-          <span>
-            What did you use or buy?{" "}
-            <span className="text-crimson" aria-hidden="true">
-              *
-            </span>
-          </span>
-          <input
-            className={inputClass}
-            value={draft.whatUsed}
-            maxLength={REVIEW_LIMITS.maxShortFieldChars}
-            onChange={(e) => set("whatUsed", e.target.value)}
-            aria-invalid={Boolean(errors.whatUsed)}
-          />
-          {errors.whatUsed ? (
-            <span role="alert" className={fieldError}>
-              {errors.whatUsed}
-            </span>
-          ) : null}
-        </label>
-
-        <label className="flex flex-col gap-2 text-base font-semibold">
-          <span>
-            How long, or how much, did you use it?{" "}
-            <span className="text-crimson" aria-hidden="true">
-              *
-            </span>
-          </span>
-          <input
-            className={inputClass}
-            value={draft.howLong}
-            maxLength={REVIEW_LIMITS.maxShortFieldChars}
-            onChange={(e) => set("howLong", e.target.value)}
-            aria-invalid={Boolean(errors.howLong)}
-          />
-          {errors.howLong ? (
-            <span role="alert" className={fieldError}>
-              {errors.howLong}
-            </span>
-          ) : null}
-        </label>
-
-        <label className="flex flex-col gap-2 text-base font-semibold">
-          <span>
-            What stood out?{" "}
-            <span className="text-crimson" aria-hidden="true">
-              *
-            </span>
-          </span>
-          <span className="text-sm font-normal text-neutral">
-            Good, mixed or bad — in your own words.
-          </span>
-          <textarea
-            className={inputClass}
-            rows={5}
-            value={draft.honestThought}
-            maxLength={REVIEW_LIMITS.maxThoughtChars}
-            onChange={(e) => set("honestThought", e.target.value)}
-            aria-invalid={Boolean(errors.honestThought)}
-          />
-          {errors.honestThought ? (
-            <span role="alert" className={fieldError}>
-              {errors.honestThought}
-            </span>
-          ) : null}
-        </label>
+        {restored ? (
+          <Note>We kept the review you wrote before adding your receipt code. Check it, then preview.</Note>
+        ) : null}
+        <ReviewFields draft={draft} set={set} errors={errors} />
 
         {formError ? <Alert>{formError}</Alert> : null}
         <div>

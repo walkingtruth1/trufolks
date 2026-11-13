@@ -143,6 +143,8 @@ export function computeChecks(input: CheckInput, slackSeconds: number): Check[] 
 export interface PendingPurchase {
   purchaseId: string;
   merchantName: string;
+  /** v1.8: sent without a TruFolks code (no business, no offer, no reward). */
+  receiptOnly: boolean;
   campaignName: string | null;
   productLabel: string;
   typedOrderValueCents: number;
@@ -157,13 +159,14 @@ export interface PendingPurchase {
 
 const PENDING_SQL = `
   select vp.id as purchase_id, vp.product_label, vp.order_value_cents, vp.currency, vp.purchased_at,
-         c.name as campaign_name, c.starts_at, c.ends_at, m.name as merchant_name,
+         c.name as campaign_name, c.starts_at, c.ends_at, coalesce(m.name, to_jsonb(vp) ->> 'store_name') as merchant_name,
+         vp.merchant_id is null as receipt_only,
          rc.issue_mode, rc.claimed_at,
          (rp.photo is not null) as has_photo, rp.uploaded_at, rp.exif_taken_at, rp.exif_has_offset,
          (select count(*)::int from receipt_codes x
            where x.campaign_id = vp.campaign_id and x.claimed_by_user_id = vp.user_id) as claims_in_campaign
     from verified_purchases vp
-    join merchants m on m.id = vp.merchant_id
+    left join merchants m on m.id = vp.merchant_id
     left join campaigns c on c.id = vp.campaign_id
     left join receipt_codes rc on rc.id = vp.receipt_code_id
     left join receipt_photos rp on rp.verified_purchase_id = vp.id
@@ -179,6 +182,7 @@ type PendingRow = {
   starts_at: unknown;
   ends_at: unknown;
   merchant_name: string;
+  receipt_only: boolean;
   issue_mode: string | null;
   claimed_at: unknown;
   has_photo: boolean | null;
@@ -195,6 +199,7 @@ function toPending(r: PendingRow, slackSeconds: number): PendingPurchase {
   return {
     purchaseId: r.purchase_id,
     merchantName: r.merchant_name,
+    receiptOnly: r.receipt_only === true,
     campaignName: r.campaign_name,
     productLabel: r.product_label,
     typedOrderValueCents: r.order_value_cents,

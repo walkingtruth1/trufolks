@@ -137,8 +137,8 @@ export function validateConfig(input: unknown): ValidationResult {
   // CFG-09 — never by individual inside a friend group.
   bool("split_test.enabled", c.split_test.enabled);
   oneOf("split_test.unit", c.split_test.unit, ["merchant", "cohort"]);
-  // CFG-07 — wider sharing isn't built.
-  exact("visibility.scope", c.visibility.scope, "contacts_only", "contacts-only is the only visibility built (P1, FR-03).");
+  // CFG-07 — every new review starts Friends only; owners widen it per review (v1.7).
+  exact("visibility.scope", c.visibility.scope, "contacts_only", "new reviews always start Friends only (P1, FR-03); owners make a review public one at a time.");
   // CFG-10 / LEG-03 — the disclosure must state the formula, the amount and that it's the same for any rating.
   const d = c.disclosure;
   if (typeof d.wording_version !== "string" || !d.wording_version.trim() || d.wording_version.length > 40) {
