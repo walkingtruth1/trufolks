@@ -244,11 +244,15 @@ export const getReview = createServerFn({ method: "POST" })
 
 export const getProduct = createServerFn({ method: "POST" })
   .middleware([optionalAuthMiddleware])
-  .inputValidator((data: unknown) => ({ slug: text(data, "slug", 120) }))
+  .inputValidator((data: unknown) => ({ slug: text(data, "slug", 120), review: text(data, "review", 80) }))
   .handler(async ({ data, context }) => {
     try {
       const { sql, engine } = await deps();
-      const r = await engine.getProductPage(sql, { slug: data.slug, viewerId: context.userId });
+      const r = await engine.getProductPage(sql, {
+        slug: data.slug,
+        viewerId: context.userId,
+        reviewId: data.review || null,
+      });
       if (r.outcome === "moved") return { ok: true as const, moved: r.slug };
       if (r.outcome !== "ok") return fail("not_found");
       return { ok: true as const, page: r.page, signedIn: context.userId !== null };

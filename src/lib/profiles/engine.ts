@@ -533,6 +533,38 @@ export interface ProductPage {
   product: ProductRef;
   offers: ShopOffer[];
   reviews: ProfileReview[];
+  /** The review the visitor followed a link to, when they may read it (v1.9). */
+  leadReviewId: string | null;
+}
+
+/** Reviews of one product this viewer may read: the same read rule for the list and a linked review. */
+async function productReviews(
+  sql: Sql,
+  productId: string,
+  viewerId: string | null,
+  opts: { reviewId?: string; limit: number },
+): Promise<ProfileReview[]> {
+  const params: unknown[] = [productId, viewerId, opts.limit];
+  if (opts.reviewId) params.push(opts.reviewId);
+  const rows = await sql.query<VisibleRow>(
+    `select v.*, ${PRODUCT_COLS},
+            case when trufolks_profile_visible(a.user_id, a.rel) then pr.handle end as author_handle
+       from (select distinct r.user_id, trufolks_viewer_relation(r.user_id, $2) as rel
+               from review_products x join reviews r on r.id = x.review_id
+              where x.product_id = $1${opts.reviewId ? " and x.review_id = $4" : ""}) a
+       cross join lateral trufolks_visible_reviews(a.user_id, a.rel) v
+       join review_products rp0 on rp0.review_id = v.review_id and rp0.product_id = $1
+       left join profiles pr on pr.user_id = a.user_id
+       ${PRODUCT_JOIN}
+      where a.rel <> 'blocked' and v.shareable${opts.reviewId ? " and v.review_id = $4" : ""}
+      order by v.created_at desc, v.review_id desc
+      limit $3`,
+    params,
+  );
+  // Product pages only ever list shareable reviews, even the viewer's own.
+  return (await withOffers(sql, rows, false)).filter(
+    (r) => r.shareable && r.disclosure?.complete === true && r.product?.status === "approved",
+  );
 }
 
 /**
@@ -542,7 +574,14 @@ export interface ProductPage {
  */
 export async function getProductPage(
   sql: Sql,
-  input: { slug: string; viewerId: string | null },
+  input: {
+    slug: string;
+    viewerId: string | null;
+    /** A review linked from a profile: fetched on its own, so an older one still leads (v1.9). */
+    reviewId?: string | null;
+    /** How many of the newest reviews to list (tests use a small number). */
+    limit?: number;
+  },
 ): Promise<{ outcome: "ok"; page: ProductPage } | { outcome: "moved"; slug: string } | { outcome: "not_found" }> {
   const slug = (input.slug ?? "").trim().toLowerCase();
   if (!slug || slug.length > 120) return { outcome: "not_found" };
@@ -560,28 +599,23 @@ export async function getProductPage(
   if (!f) return { outcome: "not_found" };
   if (f.status === "merged" && f.merged_slug) return { outcome: "moved", slug: f.merged_slug };
   if (f.status !== "approved") return { outcome: "not_found" };
-  const rows = await sql.query<VisibleRow>(
-    `select v.*, ${PRODUCT_COLS},
-            case when trufolks_profile_visible(a.user_id, a.rel) then pr.handle end as author_handle
-       from (select distinct r.user_id, trufolks_viewer_relation(r.user_id, $2) as rel
-               from review_products x join reviews r on r.id = x.review_id
-              where x.product_id = $1) a
-       cross join lateral trufolks_visible_reviews(a.user_id, a.rel) v
-       join review_products rp0 on rp0.review_id = v.review_id and rp0.product_id = $1
-       left join profiles pr on pr.user_id = a.user_id
-       ${PRODUCT_JOIN}
-      where a.rel <> 'blocked' and v.shareable
-      order by v.created_at desc, v.review_id desc
-      limit 100`,
-    [f.id, input.viewerId],
-  );
-  // Product pages only ever list shareable reviews, even the viewer's own.
-  const reviews = (await withOffers(sql, rows, false)).filter(
-    (r) => r.shareable && r.disclosure?.complete === true && r.product?.status === "approved",
-  );
+  const limit = Math.max(1, Math.min(100, Math.floor(input.limit ?? 100)));
+  const reviews = await productReviews(sql, f.id, input.viewerId, { limit });
+  const wanted = typeof input.reviewId === "string" ? input.reviewId.trim() : "";
+  let leadReviewId: string | null = null;
+  if (wanted && wanted.length <= 80) {
+    if (reviews.some((r) => r.reviewId === wanted)) leadReviewId = wanted;
+    else {
+      const [linked] = await productReviews(sql, f.id, input.viewerId, { reviewId: wanted, limit: 1 });
+      if (linked) {
+        reviews.push(linked);
+        leadReviewId = linked.reviewId;
+      }
+    }
+  }
   if (reviews.length === 0) return { outcome: "not_found" };
   const product = reviews[0].product as ProductRef;
-  return { outcome: "ok", page: { product, offers: reviews[0].offers, reviews } };
+  return { outcome: "ok", page: { product, offers: reviews[0].offers, reviews, leadReviewId } };
 }
 
 // ------------------------------------------------------------------ catalog links (author)

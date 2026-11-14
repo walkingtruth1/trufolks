@@ -5,9 +5,12 @@
 // state. APPROVED is where owner-approved or supplied pictures for real
 // catalog records go, keyed by the start of the record's slug.
 //
-// SAMPLES are Stitch stills used only to show the gallery with pictures on a
-// local development server (`npm run dev`). They are never used in a build, so
-// staging and production never put an illustrative picture on a real entry.
+// SAMPLES are Stitch stills used only to show the gallery with pictures in
+// local QA. They are opt-in: a dev server started with
+// VITE_TRUFOLKS_SAMPLE_IMAGES=1 and the git-ignored files in public/qa-samples/.
+// Never in a build, so staging and production never put an illustrative
+// picture on a real entry. A fresh checkout without the files shows the
+// no-photo state (PickPicture also falls back if any picture fails to load).
 export interface PickImage {
   src: string;
   alt: string;
@@ -23,7 +26,7 @@ const SAMPLES: Record<string, PickImage> = {
   "krown-hardware": { src: "/qa-samples/brass-pull.jpg", alt: "A brass cabinet pull on a dark wood door" },
 };
 
-const samplesOn = import.meta.env.DEV;
+const samplesOn = import.meta.env.DEV && import.meta.env.VITE_TRUFOLKS_SAMPLE_IMAGES === "1";
 
 function match(table: Record<string, PickImage>, slug: string): PickImage | null {
   for (const [prefix, img] of Object.entries(table)) if (slug.startsWith(prefix)) return img;

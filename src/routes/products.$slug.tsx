@@ -49,7 +49,7 @@ function ProductPage() {
   useEffect(() => {
     let alive = true;
     setPage({ kind: "loading" });
-    getProduct({ data: { slug } })
+    getProduct({ data: { slug, review: review ?? "" } })
       .catch(() => null)
       .then((r) => {
         if (!alive) return;
@@ -85,14 +85,13 @@ function ProductPage() {
   const service = product.kind === "service";
   // The review the visitor came for: the one linked, else the reviewer they came from, else the newest.
   const lead =
-    reviews.find((r) => r.reviewId === review) ??
+    reviews.find((r) => r.reviewId === page.page.leadReviewId) ??
     reviews.find((r) => from && r.authorHandle === from) ??
     reviews[0] ??
     null;
   const fromReviewer = lead && from && lead.authorHandle === from ? lead : null;
   const others = reviews.filter((r) => r !== lead);
   const hero = catalogHero(product.slug);
-  const col = "flex-col gap-10";
 
   return (
     <AppPage width="wide" tone="white">
@@ -125,60 +124,58 @@ function ProductPage() {
         </div>
       ) : null}
 
-      {/* Phones: one column in reading order (item, review, sellers). Desktop: two columns. */}
-      <div className="flex flex-col gap-10 lg:grid lg:grid-cols-12 lg:items-start lg:gap-12">
-        <div className={`contents lg:col-span-7 lg:flex ${col}`}>
-          <figure className="order-2 lg:order-none">
-            <PickPicture image={hero} title={product.name} big className={`aspect-[4/3] w-full ${lift}`} />
-          </figure>
-          <section aria-labelledby="lead-review" className="order-3 lg:order-none">
-            <h2 id="lead-review" className={`${galleryLabel} text-neutral`}>
-              {lead ? (fromReviewer ? `${lead.reviewerName}'s review` : "Firsthand review") : "Reviews"}
-            </h2>
-            {lead ? (
-              <ReviewCard {...lead} footer={<ReviewLinks r={lead} />} />
-            ) : (
-              <p className="mt-3 text-[15px] leading-6 text-neutral">No reviews you can read yet.</p>
-            )}
-          </section>
-        </div>
+      {/* DOM and phone order: item, picture, review, sellers. Desktop places the same
+          elements in two columns with grid rows, without changing the reading order. */}
+      <div className="flex flex-col gap-10 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 lg:gap-y-10">
+        <header className="lg:col-span-5 lg:col-start-8 lg:row-start-1">
+          <p className={`${galleryLabel} text-neutral`}>
+            {service ? "Service" : "Product"} · {product.category}
+          </p>
+          <h1 className="mt-2 text-[32px] leading-[38px] font-semibold tracking-[-0.02em] break-words text-black md:text-[44px] md:leading-[48px]">
+            {product.name}
+          </h1>
+          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-black/10 pt-5 text-sm">
+            <Fact label={service ? "Business" : "Brand"} value={product.brand} />
+            <Fact label={service ? "Service" : "Model"} value={product.model} />
+            {product.variant ? <Fact label="Variant" value={product.variant} /> : null}
+            {product.releaseYear ? <Fact label="Released" value={String(product.releaseYear)} /> : null}
+          </dl>
+        </header>
 
-        <div className={`contents lg:sticky lg:top-28 lg:col-span-5 lg:flex ${col}`}>
-          <header className="order-1 lg:order-none">
-            <p className={`${galleryLabel} text-neutral`}>
-              {service ? "Service" : "Product"} · {product.category}
-            </p>
-            <h1 className="mt-2 text-[32px] leading-[38px] font-semibold tracking-[-0.02em] break-words text-black md:text-[44px] md:leading-[48px]">
-              {product.name}
-            </h1>
-            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-black/10 pt-5 text-sm">
-              <Fact label={service ? "Business" : "Brand"} value={product.brand} />
-              <Fact label={service ? "Service" : "Model"} value={product.model} />
-              {product.variant ? <Fact label="Variant" value={product.variant} /> : null}
-              {product.releaseYear ? <Fact label="Released" value={String(product.releaseYear)} /> : null}
-            </dl>
-          </header>
+        <figure className="lg:col-span-7 lg:row-span-2 lg:row-start-1">
+          <PickPicture image={hero} title={product.name} big className={`aspect-[4/3] w-full ${lift}`} />
+        </figure>
 
-          <section aria-labelledby="buy-title" className={`order-4 p-6 md:p-8 lg:order-none ${lift}`}>
-            <h2 id="buy-title" className="text-xl leading-7 font-semibold tracking-[-0.01em] text-black">
-              {service ? "Book or visit" : "Where to buy"}
-            </h2>
-            {offers.length === 0 ? (
-              <p className="mt-3 text-[15px] leading-6 text-neutral">
-                No approved {service ? "links" : "sellers"} yet. The TruFolks team checks every link before it's shown.
-              </p>
-            ) : (
-              <ul className="mt-5 flex flex-col gap-4">
-                {offers.map((o, i) => (
-                  <SellerLink key={o.offerId} offer={o} service={service} primary={i === 0} />
-                ))}
-              </ul>
-            )}
-            <p className="mt-5 border-t border-black/10 pt-4 text-[13px] leading-5 text-neutral">
-              Links open another site. You don't need a TruFolks account to follow them.
+        <section aria-labelledby="lead-review" className="lg:col-span-7 lg:row-start-3">
+          <h2 id="lead-review" className={`${galleryLabel} text-neutral`}>
+            {lead ? (fromReviewer ? `${lead.reviewerName}'s review` : "Firsthand review") : "Reviews"}
+          </h2>
+          {lead ? (
+            <ReviewCard {...lead} footer={<ReviewLinks r={lead} />} />
+          ) : (
+            <p className="mt-3 text-[15px] leading-6 text-neutral">No reviews you can read yet.</p>
+          )}
+        </section>
+
+        <section aria-labelledby="buy-title" className={`p-6 md:p-8 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-2 ${lift}`}>
+          <h2 id="buy-title" className="text-xl leading-7 font-semibold tracking-[-0.01em] text-black">
+            {service ? "Book or visit" : "Where to buy"}
+          </h2>
+          {offers.length === 0 ? (
+            <p className="mt-3 text-[15px] leading-6 text-neutral">
+              No approved {service ? "links" : "sellers"} yet. The TruFolks team checks every link before it's shown.
             </p>
-          </section>
-        </div>
+          ) : (
+            <ul className="mt-5 flex flex-col gap-4">
+              {offers.map((o, i) => (
+                <SellerLink key={o.offerId} offer={o} service={service} primary={i === 0} />
+              ))}
+            </ul>
+          )}
+          <p className="mt-5 border-t border-black/10 pt-4 text-[13px] leading-5 text-neutral">
+            Links open another site. You don't need a TruFolks account to follow them.
+          </p>
+        </section>
       </div>
 
       {others.length > 0 ? (

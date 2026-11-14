@@ -222,12 +222,15 @@ export function SignInPrompt({
 export function Stars({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, Math.round(rating)));
   return (
-    <span aria-label={`${r} out of 5 stars`} className="font-semibold whitespace-nowrap">
-      <span aria-hidden="true" className="tracking-wider">
-        {"★".repeat(r)}
-        {"☆".repeat(5 - r)}
-      </span>{" "}
-      <span className="text-sm">{r}/5</span>
+    <span className="font-semibold whitespace-nowrap">
+      <span aria-hidden="true">
+        <span className="tracking-wider">
+          {"★".repeat(r)}
+          {"☆".repeat(5 - r)}
+        </span>{" "}
+        <span className="text-sm">{r}/5</span>
+      </span>
+      <span className="sr-only">Rated {r} out of 5</span>
     </span>
   );
 }

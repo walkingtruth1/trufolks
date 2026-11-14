@@ -5,7 +5,7 @@
 // Only facts the app holds are shown: item, business, category, rating,
 // Verified purchase and the reviewer's own words. No invented scores, prices,
 // stock or shipping claims.
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, BadgeCheck, Check, Share2, ShieldCheck } from "lucide-react";
 import type { ProfileReview, ProfileView, TopList } from "@/lib/profiles/engine";
@@ -62,10 +62,24 @@ export function PickPicture({
   className?: string;
   big?: boolean;
 }) {
-  if (image) {
+  const [failed, setFailed] = useState<string | null>(null);
+  const img = useRef<HTMLImageElement | null>(null);
+  // A server-rendered picture can fail before hydration, when onError isn't attached yet.
+  useEffect(() => {
+    const el = img.current;
+    if (el && el.complete && el.naturalWidth === 0 && image) setFailed(image.src);
+  }, [image]);
+  if (image && failed !== image.src) {
     return (
       <div className={`overflow-hidden bg-canvas ${className}`}>
-        <img src={image.src} alt={image.alt} loading="lazy" className="h-full w-full object-cover" />
+        <img
+          ref={img}
+          src={image.src}
+          alt={image.alt}
+          loading="lazy"
+          onError={() => setFailed(image.src)}
+          className="h-full w-full object-cover"
+        />
       </div>
     );
   }
@@ -106,11 +120,12 @@ function VerifiedTag() {
 function RatingText({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, Math.round(rating)));
   return (
-    <span aria-label={`${r} out of 5 stars`} className="text-sm font-semibold whitespace-nowrap text-black">
+    <span className="text-sm font-semibold whitespace-nowrap text-black">
       <span aria-hidden="true">
         {"★".repeat(r)}
         {"☆".repeat(5 - r)} {r}/5
       </span>
+      <span className="sr-only">Rated {r} out of 5</span>
     </span>
   );
 }

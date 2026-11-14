@@ -69,8 +69,9 @@ export function ReviewCard(p: ReviewCardProps) {
             </p>
           </div>
         </div>
-        <p className="font-semibold whitespace-nowrap" aria-label={`${r} out of 5 stars`}>
+        <p className="font-semibold whitespace-nowrap">
           <span aria-hidden="true">{ratingText(r)}</span>
+          <span className="sr-only">Rated {r} out of 5</span>
         </p>
       </div>
 
