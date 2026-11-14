@@ -24,7 +24,7 @@ fix, this branch is rebased onto the new head.
 | My Profile `/profile` | Opens like the visitor page: identity, **Add a review** as the one primary action, Share profile link, View as visitors see it, the same Top 5 gallery. All editing and audience controls are grouped under **Edit and share** (profile audience, preview as, Top 5 editor, Shop with Show in Shop). All reviews with each review's audience and product details stays below. |
 | Product page `/products/<slug>` | Desktop: picture and the relevant review on the left; item identity (brand or business, model or service, variant, verified release year) and **Where to buy** on the right. Phones: item, review, seller links, in normal flow. `?from=<handle>&review=<id>` (set by profile links) puts that reviewer's review first, adds a breadcrumb and "Back to their profile". The review card keeps rating, Verified purchase and the full disclosure together. Seller links keep their referral disclosure. Services say **View service** or **Visit business**. No seller: "No approved sellers yet…". Guests still get the page when a review of it is public. |
 | Review page | White page tone. The product link now carries `?from` and `?review`. |
-| Pictures | `src/lib/catalog/images.ts`. The catalog has no image field, so real entries show the designed no-image state. `APPROVED` is where owner-approved pictures for real records go. `SAMPLES` (Stitch stills) only apply on a local dev server, never in a build. |
+| Pictures | `src/lib/catalog/images.ts`. The catalog has no image field, so real entries show the designed no-image state. `APPROVED` is where owner-approved pictures for real records go. `SAMPLES` (Stitch stills) are opt-in on a dev server (`VITE_TRUFOLKS_SAMPLE_IMAGES=1`), never in a build. Any picture that fails to load falls back to the no-photo state. |
 
 ## Assets
 
@@ -34,7 +34,7 @@ fix, this branch is rebased onto the new head.
   serves; they look slightly soft on large retina screens. A higher-resolution original or a
   commissioned photo would be a straight file swap.
 - `public/qa-samples/` (git-ignored, local only): 6 Stitch product stills used for QA sample
-  picks. The 5 service stills in the export no longer load, so services show the no-image state.
+  picks. Opt-in: only a dev server started with `VITE_TRUFOLKS_SAMPLE_IMAGES=1` uses them. The 5 service stills in the export no longer load, so services show the no-image state.
 - No prototype switches, sample metrics, receipt IDs, scores, prices, stock or shipping claims.
 
 ## Checks
@@ -101,3 +101,16 @@ Nothing in this PR reserves space for video; the review card and product page wo
 - Needs legal review (licence terms, tax reporting for fees), payments scope, and a disclosure
   line on reused content ("Shared by the reviewer under a paid licence").
 - Real uploads, licensing offers and payments all need their own approved scope.
+
+## Codex Hold on PR #5: fixes (commit after `be6e0b1`)
+
+| Finding | Fix | Verified |
+|---|---|---|
+| Pinned review links only worked inside the 100 newest reviews | `getProductPage` takes the linked `reviewId` and, when it isn't in the list, fetches it on its own through the same read rule, product link, shareable and disclosure checks (`productReviews`). The page returns `leadReviewId`; the client leads with it. | New engine test: with the list limited to 1, Ana's older public review still leads and keeps her profile link; Cat's Friends-only review never leads for a guest but does for her friend; a review of another product or an unknown id is ignored. Browser: the featured pick's link opens with that review first and "Back to their profile". |
+| Product heading came after the review in the DOM | DOM order is now heading, picture, review, Where to buy. Desktop keeps two columns through grid placement (`lg:col-start-8`, `lg:row-start-*`). | Fresh-checkout browser run: DOM order heading → review → sellers; on phones the same order top to bottom; Tab order header → breadcrumb → Back to their profile → review links → seller links → join box, at 1440 and 390. |
+| Gallery ratings were `aria-label` on plain spans | Each rating has readable `Rated N out of 5` text; stars and the visual `N/5` are `aria-hidden`. Same change in the shared `Stars` and the review card. | 16 readable ratings per profile, no `aria-label` ratings left there, every star glyph inside `aria-hidden`; the accessibility tree for the featured pick reads "Rated 5 out of 5". |
+| Missing sample images broke pictures | Samples are opt-in (`VITE_TRUFOLKS_SAMPLE_IMAGES=1` on a dev server). `PickPicture` falls back to the no-photo state on `onError`, and on mount for a picture that failed before hydration. | A fresh `git worktree` of the fix commit (no `public/qa-samples/`), run with the flag ON: 0 broken images, 5 no-photo tiles where the samples would have been, at 1440 and 390. Screenshots: `screenshots/v1.9/retest/` (local). |
+
+Checks: `npm test` 241/241, typecheck and build pass; lint has only the two known errors in
+untouched files. Merchant-page ratings (`/merchant`) still use `aria-label`: outside this PR.
+
