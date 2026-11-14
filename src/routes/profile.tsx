@@ -3,6 +3,10 @@
 // preview, My Top 5 (Products and Services, 0–5 each, keyboard-reorderable),
 // Shop and All reviews. Every write is checked on the server (migration 0011);
 // this page only shows the result. Visitors see /u/<handle>.
+//
+// v1.9: the page opens like the visitor gallery (identity, Add a review as the
+// one primary action, quiet Share, the Top 5 gallery), then groups every
+// editing and audience control under "Edit and share".
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowDown, ArrowUp, Check, Copy, Eye, Lock, Plus, Globe, X } from "lucide-react";
@@ -17,8 +21,8 @@ import {
   Loading,
   SignInPrompt,
 } from "@/components/ui";
+import { btnAction, galleryLabel, ProfileIdentity, SectionLinks, TopFiveGallery } from "@/components/gallery";
 import {
-  Avatar,
   OfferLink,
   PickRow,
   ProductLinkForm,
@@ -102,8 +106,9 @@ function MyProfilePage() {
   const pinned = new Set([...v.topPicks.products, ...v.topPicks.services].map((r) => r.reviewId));
 
   return (
-    <AppPage width="wide">
+    <AppPage width="wide" tone="white">
       <ProfileHeader view={v} onSaved={() => void load()} />
+      <SectionLinks shop={v.shop.length} reviews={v.reviews.length} />
       <div aria-live="polite" className="mt-4 empty:hidden">
         {notice ? (
           <p className="flex items-center gap-2 border-l-[3px] border-secondary bg-surface p-3 text-sm shadow-sm">
@@ -117,11 +122,26 @@ function MyProfilePage() {
         </div>
       ) : null}
 
-      <Sharing view={v} act={act} />
+      <div className="mt-6">
+        <TopFiveGallery
+          view={v}
+          emptyNote={() => (
+            <a href="#edit-top5" className="text-sm font-semibold text-black underline underline-offset-4">
+              Pin a review to your Top 5
+            </a>
+          )}
+        />
+      </div>
 
+      <section aria-labelledby="edit-title" className="mt-20 scroll-mt-28 bg-canvas p-5 md:p-10">
+        <p className={`${galleryLabel} text-neutral`}>Only you see this</p>
+        <h2 id="edit-title" className="mt-1 text-2xl leading-8 font-semibold tracking-[-0.015em] text-black md:text-[28px] md:leading-9">
+          Edit and share
+        </h2>
+        <Sharing view={v} act={act} />
       <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-8">
-        <section aria-labelledby="top5-title" className="lg:col-span-7">
-          <SectionHeading id="top5-title" eyebrow="My Top 5" title="What I recommend" />
+        <section aria-labelledby="edit-top5" className="scroll-mt-28 lg:col-span-7">
+          <SectionHeading id="edit-top5" eyebrow="My Top 5" title="Choose and order your picks" />
           <div className="flex flex-col gap-8">
             {(["products", "services"] as const).map((list) => (
               <TopListEditor
@@ -134,7 +154,7 @@ function MyProfilePage() {
             ))}
           </div>
         </section>
-        <section aria-labelledby="shop-title" className="lg:col-span-5">
+        <section aria-labelledby="shop-title" className="scroll-mt-28 lg:col-span-5">
           <SectionHeading id="shop-title" eyebrow="Shop" title="Where to buy" />
           <ShopList
             items={v.shop}
@@ -147,14 +167,15 @@ function MyProfilePage() {
           />
         </section>
       </div>
+      </section>
 
-      <section aria-labelledby="all-title" className="mt-12 max-w-3xl">
+      <section aria-labelledby="all-title" className="mt-16 max-w-3xl scroll-mt-28">
         <SectionHeading
           id="all-title"
           eyebrow="All reviews"
           title={`My reviews (${v.reviews.length})`}
           aside={
-            <Link to="/add-review" className={btnSecondary}>
+            <Link to="/add-review" className={btnSecondary} aria-label="Add a review (from All reviews)">
               <Plus aria-hidden="true" size={16} /> Add a review
             </Link>
           }
@@ -215,98 +236,87 @@ function ProfileHeader({ view, onSaved }: { view: ProfileView; onSaved: () => vo
     }
   }
 
+  const eyebrow = (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      My Profile
+      <span className="inline-flex items-center gap-1 normal-case tracking-normal">
+        {p.audience === "public" ? <Globe aria-hidden="true" size={12} /> : <Lock aria-hidden="true" size={12} />}
+        {AUDIENCE_TEXT[p.audience]}
+      </span>
+    </span>
+  );
+
+  const bioSlot = editing ? (
+    <div className="mt-4 flex max-w-2xl flex-col gap-2">
+      <label htmlFor="display-name" className="text-sm font-semibold">
+        Display name <span className="font-normal text-neutral">(shown on your profile and your reviews)</span>
+      </label>
+      <input
+        id="display-name"
+        className={inputClass}
+        value={name}
+        maxLength={60}
+        autoComplete="name"
+        onChange={(e) => setName(e.target.value)}
+      />
+      <label htmlFor="bio" className="mt-2 text-sm font-semibold">
+        Bio <span className="font-normal text-neutral">({280 - bio.length} characters left)</span>
+      </label>
+      <textarea id="bio" className={`${inputClass} min-h-24`} value={bio} maxLength={280} onChange={(e) => setBio(e.target.value)} />
+      {err ? (
+        <p role="alert" className="text-sm text-crimson">
+          {err}
+        </p>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={save} disabled={busy} className={btnPrimary}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setEditing(false);
+            setBio(p.bio);
+            setName(p.name);
+          }}
+          className={btnSecondary}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  ) : (
+    <div className="mt-3 flex max-w-2xl flex-col items-start gap-2">
+      <p className={`text-base leading-7 whitespace-pre-wrap md:text-lg ${p.bio ? "text-black/80" : "text-neutral"}`}>
+        {p.bio || "Add a short bio so friends know what you're into."}
+      </p>
+      <button type="button" onClick={() => setEditing(true)} className="min-h-11 text-sm font-semibold text-black underline underline-offset-4">
+        {p.bio ? "Edit name and bio" : "Edit name, add a bio"}
+      </button>
+    </div>
+  );
+
   return (
-    <header className="border border-neutral/20 bg-surface p-5 shadow-sm md:p-8">
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-        <div className="flex min-w-0 items-start gap-4">
-          <Avatar name={p.name} />
-          <div className="min-w-0">
-            <p className={`${labelClass} text-secondary`}>My Profile</p>
-            <h1 className="mt-1 text-[28px] leading-9 font-bold tracking-[-0.02em] break-words md:text-[40px] md:leading-[48px]">
-              {p.name}
-            </h1>
-            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-neutral">
-              <span className="break-all">/u/{p.handle}</span>
-              <span
-                className={`${labelClass} inline-flex max-w-full items-center gap-1.5 px-2 py-1 ${
-                  p.audience === "public" ? "bg-secondary text-white" : "bg-tint-strong text-primary"
-                }`}
-              >
-                {p.audience === "public" ? <Globe aria-hidden="true" size={12} /> : <Lock aria-hidden="true" size={12} />}
-                {AUDIENCE_TEXT[p.audience]}
-              </span>
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row md:flex-col lg:flex-row">
-          <Link to="/add-review" className={btnPrimary}>
+    <ProfileIdentity
+      name={p.name}
+      bio={p.bio}
+      eyebrow={eyebrow}
+      bioSlot={bioSlot}
+      actions={
+        <>
+          <Link to="/add-review" className={btnAction}>
             <Plus aria-hidden="true" size={16} /> Add a review
           </Link>
-          <button type="button" onClick={copy} className={btnSecondary}>
-            {copied ? <Check aria-hidden="true" size={16} /> : <Copy aria-hidden="true" size={16} />}
-            {copied ? "Link copied" : "Copy profile link"}
+          <button type="button" onClick={copy} className="inline-flex min-h-11 items-center justify-center gap-2 border border-black/15 bg-surface px-4 py-2 text-xs font-semibold tracking-[0.06em] text-black uppercase hover:border-black">
+            {copied ? <Check aria-hidden="true" size={14} /> : <Copy aria-hidden="true" size={14} />}
+            {copied ? "Link copied" : "Share profile link"}
           </button>
-        </div>
-      </div>
-
-      <div className="mt-6 border-t border-neutral/20 pt-4">
-        {editing ? (
-          <div className="flex flex-col gap-2">
-            <label htmlFor="display-name" className="text-sm font-semibold">
-              Display name <span className="font-normal text-neutral">(shown on your profile and your reviews)</span>
-            </label>
-            <input
-              id="display-name"
-              className={inputClass}
-              value={name}
-              maxLength={60}
-              autoComplete="name"
-              onChange={(e) => setName(e.target.value)}
-            />
-            <label htmlFor="bio" className="mt-2 text-sm font-semibold">
-              Bio <span className="font-normal text-neutral">({280 - bio.length} characters left)</span>
-            </label>
-            <textarea
-              id="bio"
-              className={`${inputClass} min-h-24`}
-              value={bio}
-              maxLength={280}
-              onChange={(e) => setBio(e.target.value)}
-            />
-            {err ? (
-              <p role="alert" className="text-sm text-crimson">
-                {err}
-              </p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={save} disabled={busy} className={btnPrimary}>
-                {busy ? "Saving…" : "Save"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(false);
-                  setBio(p.bio);
-                  setName(p.name);
-                }}
-                className={btnSecondary}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <p className={`max-w-2xl text-[15px] leading-6 whitespace-pre-wrap ${p.bio ? "" : "text-neutral"}`}>
-              {p.bio || "Add a short bio so friends know what you're into."}
-            </p>
-            <button type="button" onClick={() => setEditing(true)} className="text-sm font-semibold text-secondary underline">
-              {p.bio ? "Edit name and bio" : "Edit name, add a bio"}
-            </button>
-          </div>
-        )}
-      </div>
-    </header>
+          <Link to="/u/$handle" params={{ handle: p.handle }} className="text-xs font-semibold tracking-[0.06em] text-neutral uppercase hover:text-black">
+            View as visitors see it
+          </Link>
+        </>
+      }
+    />
   );
 }
 
@@ -318,7 +328,7 @@ function Sharing({ view, act }: { view: ProfileView; act: Act }) {
   const p = view.profile;
   const publicReviews = view.reviews.filter((r) => r.visibility === "public").length;
   return (
-    <section aria-labelledby="sharing-title" className="mt-6 border border-secondary/20 bg-tint p-5 md:p-6">
+    <section aria-labelledby="sharing-title" className="mt-6 bg-surface p-5 md:p-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div>
           <h2 id="sharing-title" className="text-lg leading-7 font-bold">

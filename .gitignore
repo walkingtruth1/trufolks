@@ -11,3 +11,6 @@ node_modules
 
 # Stitch design exports (visual reference only, STITCH-UI-01; not shipped)
 design/stitch/
+
+# v1.9 local QA sample stills (Stitch); never used for real entries
+public/qa-samples/

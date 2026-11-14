@@ -19,6 +19,7 @@ Locked by Jack on 11 November 2026. Every screen, component and Google Stitch im
 | `--color-surface` | `#FFFFFF` | `bg-surface` | Cards, sheets, inputs |
 | `--color-amber` | `#B45309` | `text-amber` `border-amber` | Attention: flagged / on hold |
 | `--color-crimson` | `#B91C1C` | `text-crimson` `border-crimson` | Errors, forfeited, destructive actions |
+| `--color-action` | `#FFDE00` | `bg-action` | **Action** (v1.9 owner work order, 13 Nov 2026). Only the single primary action on a screen (Get started, Read review, Add a review), always with `text-black`. Never a tint, badge, rating or decoration. |
 | `--color-white` / `--color-black` | `#FFFFFF` / `#000000` | `text-white` … | Text on Royal Blue / Navy fills; overlays |
 
 Opacity modifiers are fine (e.g. `bg-secondary/10` for a pale blue highlight panel, `text-canvas/80` on dark surfaces).
@@ -46,7 +47,7 @@ Use the status tokens (`text-status-*`, `bg-status-*/10`, `border-status-*`) for
 
 ## Interaction
 - Focus: a 2px Royal Blue outline with a 2px offset on every focusable element (`:focus-visible` in base styles). Don't remove it.
-- Primary button: `bg-primary text-white`, or `bg-secondary text-white` for the single main call to action on a screen.
+- Primary button: `bg-primary text-white`. The single main call to action on the v1.9 gallery surfaces (Home, profiles, product pages) is `bg-action text-black`; older app screens keep `bg-secondary text-white` until they are redesigned.
 - Secondary button: `border border-primary text-primary bg-surface`.
 - Destructive: `text-crimson border-crimson`.
 - Links: `text-secondary underline` on light surfaces; `text-canvas underline` on dark.
@@ -57,7 +58,7 @@ Use the status tokens (`text-status-*`, `bg-status-*/10`, `border-status-*`) for
 - The MER-02 statement and MER-07 walkthrough on the merchant dashboard.
 
 ## Banned
-- **No green anywhere in the app**: no green, emerald, lime, teal, olive or chartreuse, and no yellow. That rules out green "success" states too: Paid is Navy and Ready is Royal Blue.
+- **No green anywhere in the app**: no green, emerald, lime, teal, olive or chartreuse, and no yellow except the `action` token above (v1.9), which only fills the primary button with black text. That rules out green "success" states too: Paid is Navy and Ready is Royal Blue.
 - The legacy tokens `ink`, `cream`, `moss`, `sage` and `lime` (the v1.5 palette) are removed. Use the tokens above.
 - No hard-coded hex colours in components. Add a token here first, if Jack approves.
 

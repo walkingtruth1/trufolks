@@ -27,12 +27,15 @@ export const linkClass = "font-semibold text-secondary underline";
 export function AppPage({
   children,
   width = "narrow",
+  tone = "canvas",
 }: {
   children: ReactNode;
   width?: "narrow" | "wide";
+  /** v1.9 gallery pages (profiles, product pages) sit on clean white with black type. */
+  tone?: "canvas" | "white";
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-canvas text-primary">
+    <div className={`flex min-h-screen flex-col ${tone === "white" ? "bg-surface text-black" : "bg-canvas text-primary"}`}>
       <SiteHeader variant="app" />
       <main
         className={`mx-auto w-full flex-1 px-4 pt-24 pb-12 md:pt-32 md:pb-20 ${
@@ -219,12 +222,15 @@ export function SignInPrompt({
 export function Stars({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, Math.round(rating)));
   return (
-    <span aria-label={`${r} out of 5 stars`} className="font-semibold whitespace-nowrap">
-      <span aria-hidden="true" className="tracking-wider">
-        {"★".repeat(r)}
-        {"☆".repeat(5 - r)}
-      </span>{" "}
-      <span className="text-sm">{r}/5</span>
+    <span className="font-semibold whitespace-nowrap">
+      <span aria-hidden="true">
+        <span className="tracking-wider">
+          {"★".repeat(r)}
+          {"☆".repeat(5 - r)}
+        </span>{" "}
+        <span className="text-sm">{r}/5</span>
+      </span>
+      <span className="sr-only">Rated {r} out of 5</span>
     </span>
   );
 }

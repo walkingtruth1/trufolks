@@ -470,6 +470,57 @@ test("product page: approved only, public reviews for guests, approved seller li
   await c.db.close();
 });
 
+test("product page: a linked review leads even when it is older than the newest reviews listed (v1.9)", async () => {
+  const c = await fresh();
+  const old = await buy(c, "ana", "reviewed", "Hario V60");
+  const mid = await buy(c, "ben", "reviewed", "Hario V60");
+  const hidden = await buy(c, "cat", "reviewed", "Hario V60");
+  const la = (await linkReviewProduct(c.sql, {
+    userId: "ana",
+    reviewId: old.reviewId as string,
+    fields: { kind: "product", brand: "Hario", model: "V60", category: "Coffee gear" },
+  })) as { productId: string };
+  await adminDecideProduct(c.sql, { adminId: "admin1", productId: la.productId, action: "approve" });
+  for (const [user, r] of [["ben", mid], ["cat", hidden]] as const) {
+    await linkReviewProduct(c.sql, {
+      userId: user,
+      reviewId: r.reviewId as string,
+      fields: { kind: "product", brand: "Hario", model: "V60", category: "Coffee gear" },
+    });
+  }
+  // Ana's review was posted first, so it is the oldest. Ana and Ben share publicly; Cat stays Friends only.
+  await setReviewAudience(c.sql, { userId: "ana", reviewId: old.reviewId as string, audience: "public" });
+  await setReviewAudience(c.sql, { userId: "ben", reviewId: mid.reviewId as string, audience: "public" });
+  await setProfileAudience(c.sql, { userId: "ana", audience: "public" });
+  const slug = (await c.sql.query<{ slug: string }>(`select slug from catalog_products where id = $1`, [la.productId]))[0].slug;
+  type Page = { page: { leadReviewId: string | null; reviews: { reviewId: string; authorHandle: string | null }[] } };
+
+  // Only the newest review fits the list, yet the linked older one is fetched and leads.
+  const linked = (await getProductPage(c.sql, { slug, viewerId: null, reviewId: old.reviewId, limit: 1 })) as Page;
+  assert.equal(linked.page.leadReviewId, old.reviewId);
+  assert.deepEqual(linked.page.reviews.map((r) => r.reviewId).sort(), [mid.reviewId, old.reviewId].sort());
+  const lead = linked.page.reviews.find((r) => r.reviewId === old.reviewId);
+  assert.equal(lead?.authorHandle, await handleOf(c, "ana"), "the link back to Ana's profile is kept");
+  assertNoPrivateFields(linked);
+
+  // Same checks as the list: a Friends-only review never leads for a guest, and a review of
+  // another product or an unknown id is ignored.
+  const blocked = (await getProductPage(c.sql, { slug, viewerId: null, reviewId: hidden.reviewId, limit: 1 })) as Page;
+  assert.equal(blocked.page.leadReviewId, null);
+  assert.ok(!blocked.page.reviews.some((r) => r.reviewId === hidden.reviewId));
+  const other = await buy(c, "dan", "reviewed", "Chemex");
+  for (const id of [other.reviewId as string, "no-such-review"]) {
+    const r = (await getProductPage(c.sql, { slug, viewerId: null, reviewId: id, limit: 1 })) as Page;
+    assert.equal(r.page.leadReviewId, null);
+    assert.equal(r.page.reviews.length, 1);
+  }
+  // Cat's friend can follow the link to it.
+  await befriend(c, "cat", "dan");
+  const friend = (await getProductPage(c.sql, { slug, viewerId: "dan", reviewId: hidden.reviewId, limit: 1 })) as Page;
+  assert.equal(friend.page.leadReviewId, hidden.reviewId);
+  await c.db.close();
+});
+
 test("legacy reviews without a catalog link stay readable", async () => {
   const c = await fresh();
   const { reviewId } = await buy(c, "ana");

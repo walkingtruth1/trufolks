@@ -7,20 +7,12 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Eye, Lock, Users } from "lucide-react";
-import { AppPage, btnSecondary, Chip, labelClass, linkClass, Loading } from "@/components/ui";
-import {
-  Avatar,
-  JoinInvite,
-  NotShared,
-  PickRow,
-  ProductFooter,
-  SectionHeading,
-  ShopList,
-} from "@/components/profile-ui";
-import type { ProfileView, TopList } from "@/lib/profiles/engine";
+import { AppPage, btnSecondary, Chip, Loading } from "@/components/ui";
+import { JoinInvite, NotShared, SectionHeading, ShopList } from "@/components/profile-ui";
+import { ProfileIdentity, ReviewRegister, SectionLinks, TopFiveGallery } from "@/components/gallery";
+import type { ProfileView } from "@/lib/profiles/engine";
 import { profileMessage } from "@/lib/profiles/messages";
 import { getProfile } from "@/lib/profiles/server-fns";
-import { ReviewCard } from "@/lib/reviews/review-card";
 
 type As = "friend" | "anonymous";
 
@@ -83,90 +75,49 @@ function VisitorProfile() {
   if (page.kind !== "ready") return null;
   const v = page.view;
   const p = v.profile;
-  const picks = v.topPicks.products.length + v.topPicks.services.length;
   const guest = !page.signedIn;
 
   return (
-    <AppPage width="wide">
+    <AppPage width="wide" tone="white">
       {v.isOwner ? <PreviewBar handle={p.handle} as={as ?? null} audience={p.audience} /> : null}
-      <header className="border border-neutral/20 bg-surface p-5 shadow-sm md:p-8">
-        <div className="flex items-start gap-4">
-          <Avatar name={p.name} />
-          <div className="min-w-0">
-            <p className={`${labelClass} flex items-center gap-1.5 text-secondary`}>
-              {v.relation === "friend" ? <Users aria-hidden="true" size={14} /> : null}
-              {RELATION_TEXT[v.relation]}
-            </p>
-            <h1 className="mt-1 text-[28px] leading-9 font-bold tracking-[-0.02em] break-words md:text-[40px] md:leading-[48px]">
-              {p.name}
-            </h1>
-            {p.bio ? <p className="mt-2 max-w-2xl text-[15px] leading-6 whitespace-pre-wrap">{p.bio}</p> : null}
-          </div>
-        </div>
-      </header>
+      <ProfileIdentity
+        name={p.name}
+        bio={p.bio}
+        eyebrow={
+          <span className="inline-flex items-center gap-1.5">
+            {v.relation === "friend" ? <Users aria-hidden="true" size={13} /> : null}
+            {RELATION_TEXT[v.relation]}
+          </span>
+        }
+        sharePath={here}
+      />
 
       {v.isOwner && v.relation === "anonymous" && p.audience === "friends" ? (
-        <p className="mt-6 flex items-start gap-2 border-l-[3px] border-status-flagged bg-surface p-4 text-[15px] leading-6 shadow-sm">
+        <p className="mb-8 flex items-start gap-2 border-l-[3px] border-status-flagged bg-canvas p-4 text-[15px] leading-6">
           <Lock aria-hidden="true" size={18} className="mt-0.5 shrink-0" />
           Your profile is Friends only, so anyone else following this link sees “This profile isn't available.”
         </p>
       ) : null}
 
-      <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-8">
-        <section aria-labelledby="top5-title" className="lg:col-span-7">
-          <SectionHeading id="top5-title" eyebrow="Top 5" title={`${p.name}'s Top 5`} />
-          {picks === 0 ? (
-            <p className="border border-dashed border-neutral/40 bg-surface p-4 text-[15px] leading-6 text-neutral">
-              Nothing pinned here yet.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-8">
-              {(["products", "services"] as TopList[])
-                .filter((l) => v.topPicks[l].length > 0)
-                .map((l) => (
-                  <div key={l}>
-                    <h3 className="mb-3 border-b-2 border-primary pb-2 text-lg leading-7 font-bold">
-                      {l === "products" ? "Products" : "Services"}
-                    </h3>
-                    <ol className="flex flex-col gap-2">
-                      {v.topPicks[l].map((r, i) => (
-                        <PickRow key={r.reviewId} r={r} position={i + 1} />
-                      ))}
-                    </ol>
-                  </div>
-                ))}
-            </div>
-          )}
-        </section>
-        <section aria-labelledby="shop-title" className="lg:col-span-5">
+      <SectionLinks shop={v.shop.length} reviews={v.reviews.length} />
+
+      <TopFiveGallery view={v} />
+
+      <div className="mt-20 grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-12">
+        <section aria-labelledby="shop-title" className="scroll-mt-28 lg:col-span-5">
           <SectionHeading id="shop-title" eyebrow="Shop" title="Where to buy" />
           <ShopList items={v.shop} empty="No shop links yet." />
         </section>
-      </div>
 
-      <section aria-labelledby="all-title" className="mt-12 max-w-3xl">
-        <SectionHeading id="all-title" eyebrow="All reviews" title={`Reviews (${v.reviews.length})`} />
-        {v.reviews.length === 0 ? (
-          <p className="border border-neutral/20 bg-surface p-5 text-[15px] leading-6 text-neutral shadow-sm">
-            No reviews shared here yet.
-          </p>
-        ) : (
-          v.reviews.map((r) => (
-            <ReviewCard
-              key={r.reviewId}
-              {...r}
-              footer={
-                <div className="flex flex-col gap-3">
-                  <ProductFooter r={r} />
-                  <Link to="/reviews/$reviewId" params={{ reviewId: r.reviewId }} className={linkClass}>
-                    Open this review
-                  </Link>
-                </div>
-              }
-            />
-          ))
-        )}
-      </section>
+        <section aria-labelledby="all-title" className="scroll-mt-28 lg:col-span-7">
+          <SectionHeading id="all-title" eyebrow="All reviews" title={`Reviews (${v.reviews.length})`} />
+          {v.reviews.length === 0 ? (
+            <p className="bg-canvas p-5 text-[15px] leading-6 text-neutral">No reviews shared here yet.</p>
+          ) : (
+            <ReviewRegister reviews={v.reviews} handle={p.handle} />
+          )}
+        </section>
+      </div>
 
       {guest ? <JoinInvite next="/profile" /> : null}
     </AppPage>

@@ -6,7 +6,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, BadgeCheck, ShieldCheck, ShoppingBag } from "lucide-react";
-import { btnPrimary, btnSecondary, inputClass, labelClass, linkClass, Stars } from "@/components/ui";
+import { btnDark, btnPrimary, btnSecondary, inputClass, labelClass, linkClass, Stars } from "@/components/ui";
 import type { ProfileReview, ShopOffer } from "@/lib/profiles/engine";
 import { itemName, profileMessage } from "@/lib/profiles/messages";
 import { linkReviewToProduct } from "@/lib/profiles/server-fns";
@@ -159,13 +159,27 @@ export function ShopList({ items, empty }: { items: ProfileReview[]; empty: Reac
 }
 
 /** Product line under a review card: catalog link (approved) and seller links. */
-export function ProductFooter({ r, showOffers = true }: { r: ProfileReview; showOffers?: boolean }) {
+export function ProductFooter({
+  r,
+  showOffers = true,
+  from,
+}: {
+  r: ProfileReview;
+  showOffers?: boolean;
+  /** The profile the visitor came from, so the product page can lead back to it. */
+  from?: string | null;
+}) {
   if (!r.product || r.product.status !== "approved") return null;
   return (
     <div className="flex flex-col gap-3">
       <p>
         <span className={`${labelClass} text-neutral`}>Product · </span>
-        <Link to="/products/$slug" params={{ slug: r.product.slug }} className={linkClass}>
+        <Link
+          to="/products/$slug"
+          params={{ slug: r.product.slug }}
+          search={{ from: from ?? r.authorHandle ?? undefined, review: r.reviewId }}
+          className={linkClass}
+        >
           {r.product.name}
         </Link>
       </p>
@@ -185,9 +199,9 @@ export function JoinInvite({ next }: { next: string }) {
   return (
     <aside
       aria-labelledby="join-title"
-      className="mt-10 border-2 border-primary bg-surface p-5 shadow-[4px_4px_0_0_var(--color-primary)] md:p-8"
+      className="mt-16 bg-canvas p-5 md:p-8"
     >
-      <p className={`${labelClass} text-secondary`}>Join TruFolks</p>
+      <p className={`${labelClass} text-neutral`}>Join TruFolks</p>
       <h2 id="join-title" className="mt-1 text-xl leading-7 font-bold md:text-2xl md:leading-8">
         Start your own TruFolks profile
       </h2>
@@ -196,7 +210,7 @@ export function JoinInvite({ next }: { next: string }) {
         think, and keep your own Top 5.
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-4">
-        <Link to="/sign-up" search={{ next }} className={btnPrimary}>
+        <Link to="/sign-up" search={{ next }} className={btnDark}>
           Get started
         </Link>
         <Link to="/sign-in" search={{ next }} className="text-sm font-semibold text-primary underline">
