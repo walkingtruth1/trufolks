@@ -60,6 +60,27 @@
         "BETTER_AUTH_URL": "http://localhost:5182",
         "TRUFOLKS_ADMIN_EMAILS_DEV": "qa-admin@example.test"
       }
+    },
+    {
+      "name": "trufolks-dev-v19",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/with-app-env.mjs",
+        "node_modules\\.bin\\vite.cmd",
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5183",
+        "--strictPort"
+      ],
+      "port": 5183,
+      "autoPort": false,
+      "env": {
+        "BETTER_AUTH_URL": "http://localhost:5183",
+        "TRUFOLKS_ADMIN_EMAILS_DEV": "qa-admin@example.test",
+        "VITE_TRUFOLKS_SAMPLE_IMAGES": "1"
+      }
     }
   ]
 }
