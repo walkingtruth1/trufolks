@@ -20,6 +20,7 @@ import { catalogHero } from "@/lib/catalog/images";
 import type { ProductPage as ProductData, ProfileReview, ShopOffer } from "@/lib/profiles/engine";
 import { profileMessage } from "@/lib/profiles/messages";
 import { getProduct, requestCatalogCorrection } from "@/lib/profiles/server-fns";
+import { withTimeout } from "@/lib/with-timeout";
 import { ReviewCard } from "@/lib/reviews/review-card";
 
 type Search = { from?: string; review?: string };
@@ -34,10 +35,13 @@ export const Route = createFileRoute("/products/$slug")({
   component: ProductPage,
 });
 
+// A request that has not answered by then shows the "couldn't load" state.
+const LOAD_TIMEOUT_MS = 15_000;
+
 type Page =
   | { kind: "loading" }
   | { kind: "missing" }
-  | { kind: "error"; message: string }
+  | { kind: "error" }
   | { kind: "ready"; page: ProductData; signedIn: boolean };
 
 function ProductPage() {
@@ -45,32 +49,59 @@ function ProductPage() {
   const { from, review } = Route.useSearch();
   const navigate = useNavigate();
   const [page, setPage] = useState<Page>({ kind: "loading" });
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let alive = true;
     setPage({ kind: "loading" });
-    getProduct({ data: { slug, review: review ?? "" } })
+    // A failed, rejected or unanswered request resolves to the "couldn't load"
+    // state; only a definite not_found answer means the page isn't available.
+    withTimeout(getProduct({ data: { slug, review: review ?? "" } }), LOAD_TIMEOUT_MS)
       .catch(() => null)
       .then((r) => {
         if (!alive) return;
-        if (!r) return setPage({ kind: "error", message: profileMessage("unavailable") ?? "" });
-        if (!r.ok) return setPage(r.reason === "not_found" ? { kind: "missing" } : { kind: "error", message: r.message });
+        if (!r) return setPage({ kind: "error" });
+        if (!r.ok) return setPage(r.reason === "not_found" ? { kind: "missing" } : { kind: "error" });
         if ("moved" in r && r.moved) {
           void navigate({ to: "/products/$slug", params: { slug: r.moved }, search: { from, review }, replace: true });
           return;
         }
         if ("page" in r && r.page) setPage({ kind: "ready", page: r.page, signedIn: r.signedIn });
+        else setPage({ kind: "error" });
       });
     return () => {
       alive = false;
     };
-  }, [slug, navigate, from, review]);
+  }, [slug, navigate, from, review, attempt]);
 
   const here = `/products/${encodeURIComponent(slug)}`;
   if (page.kind === "loading") {
     return (
       <AppPage>
         <Loading />
+        <noscript>
+          <p className="mt-2 text-[15px] leading-6 text-neutral">
+            This page needs JavaScript to show the product. Turn it on and reload.
+          </p>
+        </noscript>
+      </AppPage>
+    );
+  }
+  if (page.kind === "error") {
+    return (
+      <AppPage>
+        <div role="alert" className="border border-neutral/20 bg-surface p-5 shadow-sm md:p-6">
+          <h1 className="text-2xl leading-8 font-bold">We couldn't load this product page</h1>
+          <p className="mt-2 text-[15px] leading-6 text-neutral">{profileMessage("unavailable")}</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button type="button" className={btnSecondary} onClick={() => setAttempt((n) => n + 1)}>
+              Try again
+            </button>
+            <Link to="/" className={btnSecondary}>
+              Go to Home
+            </Link>
+          </div>
+        </div>
       </AppPage>
     );
   }
