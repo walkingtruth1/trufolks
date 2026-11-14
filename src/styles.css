@@ -19,6 +19,10 @@
   --color-canvas: #f4f6f8; /* Cool White — page background (Stitch) */
   --color-surface: #ffffff; /* Card surfaces */
 
+  /* v1.9 primary action (owner work order, 13 Nov 2026): the one main
+     button on a screen, always with black text. Never decorative tint. */
+  --color-action: #ffde00;
+
   /* Semantic */
   --color-amber: #b45309; /* Attention: flagged / on hold */
   --color-crimson: #b91c1c; /* Errors, forfeited */

@@ -1,7 +1,8 @@
 // TruFolks Core design system guardrail (DESIGN_SYSTEM.md). Fails if:
 //   * the locked tokens in src/styles.css change value or go missing;
 //   * Tailwind's built-in palette is switched back on;
-//   * any green / emerald / lime / teal / olive / yellow colour, or a legacy
+//   * any green / emerald / lime / teal / olive / yellow colour name (the v1.9
+//     action colour is the token `action`, used only for the main button), or a legacy
 //     token (ink, moss, sage, lime, cream) appears anywhere in src/ or the favicon;
 //   * any hex colour in src/ is not one of the locked palette values.
 import { test } from "node:test";
@@ -23,6 +24,8 @@ export const LOCKED = {
   surface: "#ffffff",
   amber: "#b45309",
   crimson: "#b91c1c",
+  /** v1.9 primary action, black text only (DESIGN_SYSTEM.md). */
+  action: "#ffde00",
 } as const;
 
 const ALLOWED_HEX = new Set<string>([...Object.values(LOCKED), "#ffffff", "#000000"]);

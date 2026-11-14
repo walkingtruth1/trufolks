@@ -58,7 +58,7 @@ function ReviewPage() {
   }
   const r = page.review;
   return (
-    <AppPage>
+    <AppPage tone="white">
       <p className="text-xs font-semibold tracking-[0.06em] text-secondary uppercase">
         {r.visibility === "public" ? "Public review" : "Shared with friends"}
       </p>

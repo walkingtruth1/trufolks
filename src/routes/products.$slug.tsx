@@ -4,16 +4,35 @@
 // approved places to buy, and every review of it this visitor may read. A
 // guest only gets a page when at least one review of it is public. Signed-in
 // members can ask the TruFolks team to correct the record.
+//
+// v1.9 layout (final design work order): two columns on desktop, the picture
+// and the relevant review on the left, the item and Where to buy on the right.
+// On phones: the item first, then the relevant review, then seller links, all
+// in normal page flow. ?from=<handle>&review=<id> (set by profile links) keeps
+// the reviewer the visitor came from at the top, with a way back.
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppPage, btnSecondary, Chip, inputClass, labelClass, linkClass, Loading } from "@/components/ui";
-import { JoinInvite, NotShared, OfferLink, SectionHeading } from "@/components/profile-ui";
-import type { ProductPage as ProductData } from "@/lib/profiles/engine";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { AppPage, btnSecondary, Chip, inputClass, linkClass, Loading } from "@/components/ui";
+import { JoinInvite, NotShared } from "@/components/profile-ui";
+import { btnAction, btnQuiet, galleryLabel, lift, PickPicture } from "@/components/gallery";
+import { catalogHero } from "@/lib/catalog/images";
+import type { ProductPage as ProductData, ProfileReview, ShopOffer } from "@/lib/profiles/engine";
 import { profileMessage } from "@/lib/profiles/messages";
 import { getProduct, requestCatalogCorrection } from "@/lib/profiles/server-fns";
 import { ReviewCard } from "@/lib/reviews/review-card";
 
-export const Route = createFileRoute("/products/$slug")({ component: ProductPage });
+type Search = { from?: string; review?: string };
+
+export const Route = createFileRoute("/products/$slug")({
+  validateSearch: (search: Record<string, unknown>): Search => {
+    const out: Search = {};
+    if (typeof search.from === "string" && /^[a-z0-9-]{1,40}$/i.test(search.from)) out.from = search.from;
+    if (typeof search.review === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(search.review)) out.review = search.review;
+    return out;
+  },
+  component: ProductPage,
+});
 
 type Page =
   | { kind: "loading" }
@@ -23,6 +42,7 @@ type Page =
 
 function ProductPage() {
   const { slug } = Route.useParams();
+  const { from, review } = Route.useSearch();
   const navigate = useNavigate();
   const [page, setPage] = useState<Page>({ kind: "loading" });
 
@@ -36,7 +56,7 @@ function ProductPage() {
         if (!r) return setPage({ kind: "error", message: profileMessage("unavailable") ?? "" });
         if (!r.ok) return setPage(r.reason === "not_found" ? { kind: "missing" } : { kind: "error", message: r.message });
         if ("moved" in r && r.moved) {
-          void navigate({ to: "/products/$slug", params: { slug: r.moved }, replace: true });
+          void navigate({ to: "/products/$slug", params: { slug: r.moved }, search: { from, review }, replace: true });
           return;
         }
         if ("page" in r && r.page) setPage({ kind: "ready", page: r.page, signedIn: r.signedIn });
@@ -44,7 +64,7 @@ function ProductPage() {
     return () => {
       alive = false;
     };
-  }, [slug, navigate]);
+  }, [slug, navigate, from, review]);
 
   const here = `/products/${encodeURIComponent(slug)}`;
   if (page.kind === "loading") {
@@ -62,76 +82,175 @@ function ProductPage() {
     );
   }
   const { product, offers, reviews } = page.page;
-  const counts = [5, 4, 3, 2, 1].map((s) => reviews.filter((r) => r.rating === s).length);
+  const service = product.kind === "service";
+  // The review the visitor came for: the one linked, else the reviewer they came from, else the newest.
+  const lead =
+    reviews.find((r) => r.reviewId === review) ??
+    reviews.find((r) => from && r.authorHandle === from) ??
+    reviews[0] ??
+    null;
+  const fromReviewer = lead && from && lead.authorHandle === from ? lead : null;
+  const others = reviews.filter((r) => r !== lead);
+  const hero = catalogHero(product.slug);
+  const col = "flex-col gap-10";
 
   return (
-    <AppPage>
-      <p className={`${labelClass} text-secondary`}>{product.kind === "service" ? "Service" : "Product"}</p>
-      <h1 className="mt-2 text-[28px] leading-9 font-bold tracking-[-0.02em] break-words md:text-[40px] md:leading-[48px]">
-        {product.name}
-      </h1>
-      <dl className="mt-4 grid grid-cols-2 gap-px border border-neutral/20 bg-neutral/20 text-sm sm:grid-cols-4">
-        <Fact label={product.kind === "service" ? "Business" : "Brand"} value={product.brand} />
-        <Fact label="Category" value={product.category} />
-        <Fact label="Variant" value={product.variant ?? "—"} />
-        <Fact label="Released" value={product.releaseYear ? String(product.releaseYear) : "—"} />
-      </dl>
+    <AppPage width="wide" tone="white">
+      <nav aria-label="Breadcrumb" className={`${galleryLabel} mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-neutral`}>
+        <Link to="/" className="hover:text-black">
+          Home
+        </Link>
+        {fromReviewer?.authorHandle ? (
+          <>
+            <span aria-hidden="true">/</span>
+            <Link to="/u/$handle" params={{ handle: fromReviewer.authorHandle }} className="hover:text-black">
+              {fromReviewer.reviewerName}
+            </Link>
+          </>
+        ) : null}
+        <span aria-hidden="true">/</span>
+        <span aria-current="page" className="min-w-0 break-words text-black">
+          {product.name}
+        </span>
+      </nav>
 
-      <section aria-labelledby="buy-title" className="mt-8">
-        <SectionHeading id="buy-title" eyebrow="Shop" title="Where to buy" />
-        {offers.length === 0 ? (
-          <p className="text-[15px] leading-6 text-neutral">No approved sellers yet.</p>
-        ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {offers.map((o) => (
-              <OfferLink key={o.offerId} offer={o} />
-            ))}
-          </ul>
-        )}
-      </section>
+      {fromReviewer?.authorHandle ? (
+        <div className="mb-10 flex flex-col gap-3 bg-canvas p-4 sm:flex-row sm:items-center sm:justify-between md:px-6">
+          <p className="text-[15px] leading-6 text-black">
+            You came from <strong className="font-semibold">{fromReviewer.reviewerName}</strong>'s profile.
+          </p>
+          <Link to="/u/$handle" params={{ handle: fromReviewer.authorHandle }} className={btnQuiet}>
+            <ArrowLeft aria-hidden="true" size={14} /> Back to their profile
+          </Link>
+        </div>
+      ) : null}
 
-      <section aria-labelledby="reviews-title" className="mt-10">
-        <SectionHeading id="reviews-title" eyebrow="Verified reviews" title={`Reviews (${reviews.length})`} />
-        <ul className="grid grid-cols-5 gap-2 text-center text-sm" aria-label="Ratings given">
-          {[5, 4, 3, 2, 1].map((s, i) => (
-            <li key={s} className="border border-neutral/30 bg-surface py-2">
-              <span className="block font-semibold">
-                {s} {s === 1 ? "star" : "stars"}
-              </span>
-              <span className="block text-lg font-black">{counts[i]}</span>
-            </li>
-          ))}
-        </ul>
-        {reviews.map((r) => (
-          <ReviewCard
-            key={r.reviewId}
-            {...r}
-            footer={
-              <p className="flex flex-wrap gap-x-5 gap-y-1">
-                <Link to="/reviews/$reviewId" params={{ reviewId: r.reviewId }} className={linkClass}>
-                  Open this review
-                </Link>
-                {r.authorHandle ? (
-                  <Link to="/u/$handle" params={{ handle: r.authorHandle }} className={linkClass}>
-                    More from {r.reviewerName}
-                  </Link>
-                ) : null}
+      {/* Phones: one column in reading order (item, review, sellers). Desktop: two columns. */}
+      <div className="flex flex-col gap-10 lg:grid lg:grid-cols-12 lg:items-start lg:gap-12">
+        <div className={`contents lg:col-span-7 lg:flex ${col}`}>
+          <figure className="order-2 lg:order-none">
+            <PickPicture image={hero} title={product.name} big className={`aspect-[4/3] w-full ${lift}`} />
+          </figure>
+          <section aria-labelledby="lead-review" className="order-3 lg:order-none">
+            <h2 id="lead-review" className={`${galleryLabel} text-neutral`}>
+              {lead ? (fromReviewer ? `${lead.reviewerName}'s review` : "Firsthand review") : "Reviews"}
+            </h2>
+            {lead ? (
+              <ReviewCard {...lead} footer={<ReviewLinks r={lead} />} />
+            ) : (
+              <p className="mt-3 text-[15px] leading-6 text-neutral">No reviews you can read yet.</p>
+            )}
+          </section>
+        </div>
+
+        <div className={`contents lg:sticky lg:top-28 lg:col-span-5 lg:flex ${col}`}>
+          <header className="order-1 lg:order-none">
+            <p className={`${galleryLabel} text-neutral`}>
+              {service ? "Service" : "Product"} · {product.category}
+            </p>
+            <h1 className="mt-2 text-[32px] leading-[38px] font-semibold tracking-[-0.02em] break-words text-black md:text-[44px] md:leading-[48px]">
+              {product.name}
+            </h1>
+            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-black/10 pt-5 text-sm">
+              <Fact label={service ? "Business" : "Brand"} value={product.brand} />
+              <Fact label={service ? "Service" : "Model"} value={product.model} />
+              {product.variant ? <Fact label="Variant" value={product.variant} /> : null}
+              {product.releaseYear ? <Fact label="Released" value={String(product.releaseYear)} /> : null}
+            </dl>
+          </header>
+
+          <section aria-labelledby="buy-title" className={`order-4 p-6 md:p-8 lg:order-none ${lift}`}>
+            <h2 id="buy-title" className="text-xl leading-7 font-semibold tracking-[-0.01em] text-black">
+              {service ? "Book or visit" : "Where to buy"}
+            </h2>
+            {offers.length === 0 ? (
+              <p className="mt-3 text-[15px] leading-6 text-neutral">
+                No approved {service ? "links" : "sellers"} yet. The TruFolks team checks every link before it's shown.
               </p>
-            }
-          />
-        ))}
-      </section>
+            ) : (
+              <ul className="mt-5 flex flex-col gap-4">
+                {offers.map((o, i) => (
+                  <SellerLink key={o.offerId} offer={o} service={service} primary={i === 0} />
+                ))}
+              </ul>
+            )}
+            <p className="mt-5 border-t border-black/10 pt-4 text-[13px] leading-5 text-neutral">
+              Links open another site. You don't need a TruFolks account to follow them.
+            </p>
+          </section>
+        </div>
+      </div>
+
+      {others.length > 0 ? (
+        <section aria-labelledby="reviews-title" className="mt-20 max-w-3xl">
+          <p className={`${galleryLabel} text-neutral`}>Verified reviews</p>
+          <h2 id="reviews-title" className="mt-1 text-2xl leading-8 font-semibold tracking-[-0.015em] text-black">
+            More reviews ({others.length})
+          </h2>
+          {others.map((r) => (
+            <ReviewCard key={r.reviewId} {...r} footer={<ReviewLinks r={r} />} />
+          ))}
+        </section>
+      ) : null}
 
       {page.signedIn ? <Correction slug={product.slug} /> : <JoinInvite next="/profile" />}
     </AppPage>
   );
 }
 
+function ReviewLinks({ r }: { r: ProfileReview }) {
+  return (
+    <p className="flex flex-wrap gap-x-5 gap-y-1">
+      <Link to="/reviews/$reviewId" params={{ reviewId: r.reviewId }} className={linkClass}>
+        Open this review
+      </Link>
+      {r.authorHandle ? (
+        <Link to="/u/$handle" params={{ handle: r.authorHandle }} className={linkClass}>
+          More from {r.reviewerName}
+        </Link>
+      ) : null}
+    </p>
+  );
+}
+
+/** One approved seller or business link, with its own referral disclosure. */
+function SellerLink({ offer, service, primary }: { offer: ShopOffer; service: boolean; primary: boolean }) {
+  const label = service
+    ? offer.kind === "brand"
+      ? "Visit business"
+      : "View service"
+    : offer.kind === "brand"
+      ? "From the brand"
+      : "Buy at";
+  return (
+    <li className="flex flex-col gap-1.5">
+      <a
+        href={offer.url}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        className={`${primary ? btnAction : btnQuiet} w-full justify-between text-left`}
+      >
+        <span className="min-w-0 break-words">
+          {label}
+          <span className="font-normal normal-case"> · {offer.sellerName}</span>
+        </span>
+        <ArrowUpRight aria-hidden="true" size={16} className="shrink-0" />
+        <span className="sr-only">(opens in a new tab)</span>
+      </a>
+      <span className="text-[12px] leading-4 text-neutral">
+        {offer.referralCommission
+          ? "TruFolks may earn a referral commission from this link."
+          : "TruFolks earns no commission from this link."}
+      </span>
+    </li>
+  );
+}
+
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-surface p-3">
-      <dt className={`${labelClass} text-neutral`}>{label}</dt>
-      <dd className="mt-1 font-semibold break-words">{value}</dd>
+    <div className="min-w-0">
+      <dt className={`${galleryLabel} text-neutral`}>{label}</dt>
+      <dd className="mt-1 font-semibold break-words text-black">{value}</dd>
     </div>
   );
 }

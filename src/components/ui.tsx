@@ -27,12 +27,15 @@ export const linkClass = "font-semibold text-secondary underline";
 export function AppPage({
   children,
   width = "narrow",
+  tone = "canvas",
 }: {
   children: ReactNode;
   width?: "narrow" | "wide";
+  /** v1.9 gallery pages (profiles, product pages) sit on clean white with black type. */
+  tone?: "canvas" | "white";
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-canvas text-primary">
+    <div className={`flex min-h-screen flex-col ${tone === "white" ? "bg-surface text-black" : "bg-canvas text-primary"}`}>
       <SiteHeader variant="app" />
       <main
         className={`mx-auto w-full flex-1 px-4 pt-24 pb-12 md:pt-32 md:pb-20 ${
