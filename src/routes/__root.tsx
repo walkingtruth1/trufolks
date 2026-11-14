@@ -8,13 +8,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TruFolks — The Anti-Influencer Network" },
+      { title: "TruFolks — Find something worth trying" },
       {
         name: "description",
         content:
-          "Real purchases. Unscripted reviews. Receipt-verified content connecting everyday shoppers with e-commerce brands.",
+          "Honest reviews of verified purchases from friends you know. Find something worth trying at participating local shops.",
       },
-      { name: "theme-color", content: "#f2f1e9" },
+      // TruFolks Core: Dominant Navy (see DESIGN_SYSTEM.md).
+      { name: "theme-color", content: "#0F2A44" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -32,7 +33,7 @@ export const Route = createRootRoute({
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-canvas font-sans text-primary antialiased">
         <PreviewHostBridge />
         <AuthProvider>
           <Outlet />

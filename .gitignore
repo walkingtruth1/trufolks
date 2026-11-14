@@ -1,2 +1,13 @@
 node_modules
 .vercel/
+
+# Secrets and local env files (never commit)
+.env
+.env.*
+!.env.example
+
+# Archives
+*.zip
+
+# Stitch design exports (visual reference only, STITCH-UI-01; not shipped)
+design/stitch/

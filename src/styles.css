@@ -1,12 +1,38 @@
 @import "tailwindcss";
 
+/*
+ * TruFolks Core design tokens — LOCKED. See DESIGN_SYSTEM.md before changing
+ * anything here. src/lib/design-system.test.ts checks these exact values and
+ * the banned-colour list in DESIGN_SYSTEM.md across all of src/.
+ *
+ * `--color-*: initial` removes Tailwind's built-in palette, so only the tokens
+ * below exist; any default palette class (e.g. a numbered shade) does nothing.
+ */
 @theme {
-  --color-cream: #f2f1e9;
-  --color-ink: #191b17;
-  --color-lime: #d6ff3f;
-  --color-moss: #66695f;
-  --color-sage: #cdcec3;
-  --color-line: #191b1733;
+  --color-*: initial;
+
+  /* Brand */
+  --color-primary: #0f2a44; /* Dominant Navy — primary buttons, headers, key text */
+  --color-tertiary: #0a1f33; /* Deep Navy — dark surfaces, borders */
+  --color-secondary: #2563eb; /* Royal Blue — interactive accents, focus rings, active states */
+  --color-neutral: #5b6b7c; /* Slate — secondary text, muted icons, dividers */
+  --color-canvas: #f4f6f8; /* Cool White — page background (Stitch) */
+  --color-surface: #ffffff; /* Card surfaces */
+
+  /* Semantic */
+  --color-amber: #b45309; /* Attention: flagged / on hold */
+  --color-crimson: #b91c1c; /* Errors, forfeited */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Status (payouts and purchases) — see DESIGN_SYSTEM.md */
+  --color-status-pending: #5b6b7c; /* Slate: receipt being checked */
+  --color-status-held: #5b6b7c; /* Slate: held for the return window */
+  --color-status-ready: #2563eb; /* Royal Blue: released, ready to pay */
+  --color-status-paid: #0f2a44; /* Navy: paid */
+  --color-status-flagged: #b45309; /* Amber: on hold, being checked */
+  --color-status-forfeited: #b91c1c; /* Crimson: not paid */
+
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --radius: 0px;
 }
@@ -22,14 +48,27 @@
   }
 
   body {
-    background: var(--color-cream);
-    color: var(--color-ink);
+    background: var(--color-canvas);
+    color: var(--color-primary);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
 
-  ::selection {
-    background: var(--color-lime);
-    color: var(--color-ink);
+  :focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
   }
+
+  ::selection {
+    background: var(--color-secondary);
+    color: var(--color-white);
+  }
+}
+
+/* Stitch's pale-blue panels, mixed onto white so they stay blue on the cream canvas. */
+@utility bg-tint {
+  background-color: color-mix(in srgb, var(--color-secondary) 8%, var(--color-surface));
+}
+@utility bg-tint-strong {
+  background-color: color-mix(in srgb, var(--color-secondary) 14%, var(--color-surface));
 }

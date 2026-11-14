@@ -9,8 +9,8 @@
  * The read is non-recursive, so the opt-in auth schema under migrations/auth/
  * is not applied to an app that never asked for sign-in.
  *
- * No DATABASE_URL (local / preview builds) -> skip; the PGLite fallback applies
- * the same files at startup instead (see src/lib/db.ts).
+ * No DATABASE_URL on a local build -> skip; the PGLite fallback applies the same
+ * files at startup instead (see src/lib/db.ts). On Vercel it fails the build.
  */
 import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -19,6 +19,16 @@ import pg from "pg";
 import { pendingMigrations } from "./migration-plan.mjs";
 
 const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl && process.env.VERCEL?.trim()) {
+  // A deploy without a database builds "READY" but every page that touches
+  // data fails at runtime. Stop the build instead (src/lib/db.ts explains why
+  // PGLite can't stand in on Vercel).
+  console.error(
+    `[migrate] DATABASE_URL is not set for this Vercel ${process.env.VERCEL_ENV ?? ""} build. ` +
+      "Add it in Vercel → Project → Settings → Environment Variables and redeploy.",
+  );
+  process.exit(1);
+}
 if (!databaseUrl) {
   console.log(
     "[migrate] DATABASE_URL not set — skipping (the PGLite fallback migrates itself).",

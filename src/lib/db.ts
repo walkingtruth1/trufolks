@@ -19,6 +19,19 @@ const databaseUrl =
 export const dbSource: DbSource = databaseUrl ? "neon" : "pglite";
 
 /**
+ * PGLite is in-memory per server process. On Vercel each request can land on a
+ * different short-lived instance, so data and sign-ins would vanish between
+ * requests — and its WASM data files aren't packaged into the function anyway.
+ * A deployed environment must have DATABASE_URL; fail with a clear message.
+ */
+const onVercel =
+  typeof process !== "undefined" && Boolean(process.env.VERCEL?.trim());
+export const DEPLOY_DB_MISSING =
+  "[db] DATABASE_URL is not set for this Vercel environment. Connect a Postgres " +
+  "database (e.g. a Neon branch for Preview) in Vercel → Project → Settings → " +
+  "Environment Variables, then redeploy. The embedded PGLite database only runs locally.";
+
+/**
  * Minimal shared SQL surface, satisfied by both Neon and PGLite. Both the
  * tagged-template and `.query()` forms resolve to an array of row objects:
  *
@@ -176,7 +189,9 @@ async function createSql(): Promise<Sql> {
         "or a server route loader, never from client code.",
     );
   }
-  return dbSource === "neon" ? createNeonSql() : createPgliteSql();
+  if (dbSource === "neon") return createNeonSql();
+  if (onVercel) throw new Error(DEPLOY_DB_MISSING);
+  return createPgliteSql();
 }
 
 /**
@@ -229,7 +244,9 @@ export function ensureDbReady(): Promise<void> {
 const globalBoot = globalThis as typeof globalThis & {
   __pgBootstrapPromise__?: Promise<void>;
 };
-if (typeof window === "undefined" && dbSource === "pglite") {
+if (typeof window === "undefined" && dbSource === "pglite" && onVercel) {
+  console.error(DEPLOY_DB_MISSING);
+} else if (typeof window === "undefined" && dbSource === "pglite") {
   globalBoot.__pgBootstrapPromise__ ??= ensureDbReady().catch((err) => {
     globalBoot.__pgBootstrapPromise__ = undefined;
     console.error("[db] PGLite bootstrap failed:", err);
